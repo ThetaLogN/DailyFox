@@ -1,0 +1,232 @@
+{
+  "@@locale": "it",
+  "appTitleModifyDay": "Modifica la tua giornata",
+  "@appTitleModifyDay": {
+    "description": "Title displayed in the app bar when modifying an existing day's entry"
+  },
+  "appTitleNewDay": "Come è andata oggi?",
+  "@appTitleNewDay": {
+    "description": "Title displayed in the app bar when creating a new day's entry"
+  },
+  "notificationTitle": "DailyFox",
+  "@notificationTitle": {
+    "description": "Title of the daily notification"
+  },
+  "notificationBody": "Hey!! ricordati di fammi sapere come è andata la tua giornata",
+  "@notificationBody": {
+    "description": "Body of the daily notification"
+  },
+  "dialogTitleModifyRating": "Modifica valutazione",
+  "@dialogTitleModifyRating": {
+    "description": "Title of the dialog shown when modifying a rating"
+  },
+  "dialogContentModifyRating": "Vuoi modificare la valutazione di oggi? Potrai cambiare il voto, l'emoji e la parola chiave.",
+  "@dialogContentModifyRating": {
+    "description": "Content of the dialog explaining the option to modify the day's rating"
+  },
+  "dialogWidgetReminder": "Ricorda di aggiungere il widget alla schermata home per cooscere il tuo amico!",
+  "@dialogWidgetReminder": {
+    "description": "Reminder in the dialog about adding the widget to the home screen"
+  },
+  "dialogButtonOK": "OK",
+  "@dialogButtonOK": {
+    "description": "Button text for confirming the dialog"
+  },
+  "statusHeaderToday": "Come è andata oggi?",
+  "@statusHeaderToday": {
+    "description": "Text in the status header when no entry exists for today"
+  },
+  "statusHeaderRated": "Hai già valutato oggi!",
+  "@statusHeaderRated": {
+    "description": "Text in the status header when an entry exists for today"
+  },
+  "statusHeaderNoKeyword": "Nessuna parola",
+  "@statusHeaderNoKeyword": {
+    "description": "Text displayed when no keyword is set for the day"
+  },
+  "ratingCardTitle": "Voto della giornata",
+  "@ratingCardTitle": {
+    "description": "Title of the card for selecting the day's rating"
+  },
+  "ratingTextTerrible": "Pessima",
+  "@ratingTextTerrible": {
+    "description": "Rating text for scores 1-2"
+  },
+  "ratingTextBad": "Difficile",
+  "@ratingTextBad": {
+    "description": "Rating text for scores 3-4"
+  },
+  "ratingTextAverage": "Nella media",
+  "@ratingTextAverage": {
+    "description": "Rating text for scores 5-6"
+  },
+  "ratingTextGood": "Buona",
+  "@ratingTextGood": {
+    "description": "Rating text for scores 7-8"
+  },
+  "ratingTextGreat": "Fantastica",
+  "@ratingTextGreat": {
+    "description": "Rating text for scores 9-10"
+  },
+  "emojiCardTitle": "Emoji del giorno",
+  "@emojiCardTitle": {
+    "description": "Title of the card for selecting the day's emoji"
+  },
+  "emojiCardTapToChange": "Tocca per cambiare",
+  "@emojiCardTapToChange": {
+    "description": "Text prompting the user to tap to change the emoji"
+  },
+  "keywordCardTitle": "Parola del giorno",
+  "@keywordCardTitle": {
+    "description": "Title of the card for entering the day's keyword"
+  },
+  "keywordHintText": "Es: relax, lavoro, famiglia...",
+  "@keywordHintText": {
+    "description": "Hint text for the keyword text field"
+  },
+  "saveButtonNew": "Salva la mia giornata",
+  "@saveButtonNew": {
+    "description": "Text on the save button when creating a new entry"
+  },
+  "saveButtonUpdate": "Aggiorna la mia giornata",
+  "@saveButtonUpdate": {
+    "description": "Text on the save button when updating an existing entry"
+  },
+  "snackBarSavedSuccess": "Giornata salvata con successo!",
+  "@snackBarSavedSuccess": {
+    "description": "Success message when a new entry is saved"
+  },
+  "snackBarUpdatedSuccess": "Giornata aggiornata con successo!",
+  "@snackBarUpdatedSuccess": {
+    "description": "Success message when an existing entry is updated"
+  },
+  "snackBarValidationError": "Inserisci una parola per completare",
+  "@snackBarValidationError": {
+    "description": "Error message when the keyword field is empty"
+  },
+  "snackBarSaveError": "Errore nel salvataggio",
+  
+  "appTitleModifyDay": "Modifica la tua giornata",
+  "@appTitleModifyDay": {
+    "description": "Title displayed in the app bar when modifying an existing day's entry"
+  },
+  "appTitleNewDay": "Come è andata oggi?",
+  "@appTitleNewDay": {
+    "description": "Title displayed in the app bar when creating a new day's entry"
+  },
+  "notificationTitle": "Fox",
+  "@notificationTitle": {
+    "description": "Title of the daily notification"
+  },
+  "notificationBody": "Hey!! ricordati di fammi sapere come è andata la tua giornata",
+  "@notificationBody": {
+    "description": "Body of the daily notification"
+  },
+  "dialogTitleModifyRating": "Modifica valutazione",
+  "@dialogTitleModifyRating": {
+    "description": "Title of the dialog shown when modifying a rating"
+  },
+  "dialogContentModifyRating": "Vuoi modificare la valutazione di oggi? Potrai cambiare il voto, l'emoji e la parola chiave.",
+  "@dialogContentModifyRating": {
+    "description": "Content of the dialog explaining the option to modify the day's rating"
+  },
+  "dialogWidgetReminder": "Ricorda di aggiungere il widget alla schermata home per cooscere il tuo amico!",
+  "@dialogWidgetReminder": {
+    "description": "Reminder in the dialog about adding the widget to the home screen"
+  },
+  "dialogButtonOK": "OK",
+  "@dialogButtonOK": {
+    "description": "Button text for confirming the dialog"
+  },
+  "statusHeaderToday": "Come è andata oggi?",
+  "@statusHeaderToday": {
+    "description": "Text in the status header when no entry exists for today"
+  },
+  "statusHeaderRated": "Hai già valutato oggi!",
+  "@statusHeaderRated": {
+    "description": "Text in the status header when an entry exists for today"
+  },
+  "statusHeaderNoKeyword": "Nessuna parola",
+  "@statusHeaderNoKeyword": {
+    "description": "Text displayed when no keyword is set for the day"
+  },
+  "ratingCardTitle": "Voto della giornata",
+  "@ratingCardTitle": {
+    "description": "Title of the card for selecting the day's rating"
+  },
+  "ratingTextTerrible": "Pessima",
+  "@ratingTextTerrible": {
+    "description": "Rating text for scores 1-2"
+  },
+  "ratingTextBad": "Difficile",
+  "@ratingTextBad": {
+    "description": "Rating text for scores 3-4"
+  },
+  "ratingTextAverage": "Nella media",
+  "@ratingTextAverage": {
+    "description": "Rating text for scores 5-6"
+  },
+  "ratingTextGood": "Buona",
+  "@ratingTextGood": {
+    "description": "Rating text for scores 7-8"
+  },
+  "ratingTextGreat": "Fantastica",
+  "@ratingTextGreat": {
+    "description": "Rating text for scores 9-10"
+  },
+  "emojiCardTitle": "Emoji del giorno",
+  "@emojiCardTitle": {
+    "description": "Title of the card for selecting the day's emoji"
+  },
+  "emojiCardTapToChange": "Tocca per cambiare",
+  "@emojiCardTapToChange": {
+    "description": "Text prompting the user to tap to change the emoji"
+  },
+  "keywordCardTitle": "Parola del giorno",
+  "@keywordCardTitle": {
+    "description": "Title of the card for entering the day's keyword"
+  },
+  "keywordHintText": "Es: relax, lavoro, famiglia...",
+  "@keywordHintText": {
+    "description": "Hint text for the keyword text field"
+  },
+  "saveButtonNew": "Salva la mia giornata",
+  "@saveButtonNew": {
+    "description": "Text on the save button when creating a new entry"
+  },
+  "saveButtonUpdate": "Aggiorna la mia giornata",
+  "@saveButtonUpdate": {
+    "description": "Text on the save button when updating an existing entry"
+  },
+  "snackBarSavedSuccess": "Giornata salvata con successo!",
+  "@snackBarSavedSuccess": {
+    "description": "Success message when a new entry is saved"
+  },
+  "snackBarUpdatedSuccess": "Giornata aggiornata con successo!",
+  "@snackBarUpdatedSuccess": {
+    "description": "Success message when an existing entry is updated"
+  },
+  "snackBarValidationError": "Inserisci una parola per completare",
+  "@snackBarValidationError": {
+    "description": "Error message when the keyword field is empty"
+  },
+  
+  "calendarTitle": "Le mie giornate",
+  "@calendarTitle": {
+    "description": "Title displayed in the app bar of the calendar page"
+  },
+  "noEntryMessage": "Nessun dato per questo giorno",
+  "@noEntryMessage": {
+    "description": "Message displayed when no diary entry exists for the selected day"
+  },
+  "dayRatingLabel": "Giorno {ratingText}",
+  "@dayRatingLabel": {
+    "description": "Label for the rating text of a selected day, with a placeholder for the rating description",
+    "placeholders": {
+      "ratingText": {}
+    }
+  }
+}
+
+  
+  

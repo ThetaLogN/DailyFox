@@ -1,0 +1,56 @@
+name: DailyFox
+description: "A new Flutter project."
+publish_to: 'none' 
+version: 1.0.1+2
+
+environment:
+  sdk: ^3.6.1
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite: ^2.3.0
+  path: ^1.9.0
+  emoji_picker_flutter: ^1.6.1
+  fl_chart: ^0.64.0
+  home_widget: ^0.8.0
+  table_calendar: ^3.1.0
+  flutter_local_notifications: ^17.2.3
+  timezone: ^0.9.4
+  shared_preferences: ^2.2.2  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
+  flutter_timezone: ^4.1.1
+  
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.19.0 
+
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/logoApp1.png"
+
+flutter:
+  generate: true
+  uses-material-design: true
+
+  assets:
+    - assets/icon/logoApp1.png
+
+  # Fonts section (uncomment and configure if needed)
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
