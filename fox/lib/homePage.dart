@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
@@ -27,10 +29,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final TextEditingController _keywordController = TextEditingController();
   late AnimationController _saveAnimationController;
   late Animation<double> _saveAnimation;
+  final bool _shouldShowStreakCard = false;
+
+  // Streak variables
+  int _currentStreak = 0;
+  int _bestStreak = 0;
+  bool _isNewStreak = false;
+  late AnimationController _streakAnimationController;
+  late AnimationController _fireAnimationController;
+  late Animation<double> _streakScaleAnimation;
+  late Animation<double> _streakOpacityAnimation;
+  late Animation<double> _fireAnimation;
+  late Animation<Color?> _streakColorAnimation;
 
   // Configurazione widget iOS
   static const String appGroupId = "group.foxApp";
   static const String iOSWidgetName = "FoxWidget";
+
+  Timer? _countdownTimer;
+  Duration _timeUntilRating = Duration.zero;
 
   @override
   void initState() {
@@ -47,8 +64,53 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
 
+    // Streak animations
+    _streakAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fireAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat();
+
+    _streakScaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _streakAnimationController,
+        curve: Curves.elasticOut,
+      ),
+    );
+
+    _streakOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _streakAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _fireAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _fireAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _streakColorAnimation = ColorTween(
+      begin: Colors.orange,
+      end: Colors.red,
+    ).animate(
+      CurvedAnimation(
+        parent: _streakAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
     // Carica i dati dell'entry di oggi se disponibili
     _loadTodayEntry();
+    _loadStreakData();
+    _updateCountdown();
+    _startCountdownTimer();
   }
 
   @override
@@ -57,7 +119,573 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     NotiService().scheduleNotification(context);
   }
 
-  // Carica l'entry di oggi se esiste già
+  bool _canRateToday() {
+    final now = DateTime.now();
+    return now.hour >= 18; // Dopo le 18:00
+  }
+
+  void _updateCountdown() {
+    final now = DateTime.now();
+    final ratingTime = DateTime(now.year, now.month, now.day, 18, 0, 0);
+
+    if (now.isBefore(ratingTime)) {
+      setState(() {
+        _timeUntilRating = ratingTime.difference(now);
+      });
+    } else {
+      setState(() {
+        _timeUntilRating = Duration.zero;
+      });
+    }
+  }
+
+  void _startCountdownTimer() {
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _updateCountdown();
+
+      // Se è ora di valutare, ferma il timer e ricarica la pagina
+      if (_canRateToday()) {
+        timer.cancel();
+        _loadTodayEntry(); // Ricarica per mostrare la schermata di valutazione
+      }
+    });
+  }
+
+  Widget _buildWaitingScreen() {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: Text(
+          l10n.appTitleNewDay,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.grey[800],
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: Colors.grey[200],
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: _showResetDialog,
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header con countdown
+            _buildCountdownHeader(),
+
+            // Streak card
+            _buildStreakCard(),
+
+            // Statistiche
+            _buildStatsCards(),
+
+            // Messaggio motivazionale
+            _buildMotivationalCard(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCountdownHeader() {
+    final l10n = AppLocalizations.of(context)!;
+    final hours = _timeUntilRating.inHours;
+    final minutes = _timeUntilRating.inMinutes % 60;
+    final seconds = _timeUntilRating.inSeconds % 60;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CalendarPage()),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.indigo.withOpacity(0.8),
+              Colors.purple.withOpacity(0.6),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.indigo.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.schedule,
+                  color: Colors.white,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _getFormattedDate(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.endDay,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    l10n.timer,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildTimeUnit(hours.toString().padLeft(2, '0'), 'Ore'),
+                      _buildTimeUnit(minutes.toString().padLeft(2, '0'), 'Min'),
+                      _buildTimeUnit(seconds.toString().padLeft(2, '0'), 'Sec'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeUnit(String value, String label) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.8),
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatsCards() {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildStatCard(
+                l10n.valutazioni,
+                FutureBuilder<List<DiaryEntry>>(
+                  future: DatabaseHelper().getAllEntries(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Text(
+                        '${snapshot.data!.length}',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      );
+                    }
+                    return const Text('--');
+                  },
+                ),
+                Icons.star_rounded,
+                Colors.blue,
+              )),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: _buildStatCard(
+                l10n.media,
+                FutureBuilder<List<DiaryEntry>>(
+                  future: DatabaseHelper().getAllEntries(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                      final avg = snapshot.data!
+                              .map((e) => e.rating)
+                              .reduce((a, b) => a + b) /
+                          snapshot.data!.length;
+                      return Text(
+                        avg.toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      );
+                    }
+                    return const Text('--');
+                  },
+                ),
+                Icons.trending_up,
+                Colors.green,
+              )),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildStatCard(
+                l10n.thisM,
+                FutureBuilder<List<DiaryEntry>>(
+                  future: DatabaseHelper().getAllEntries(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      final now = DateTime.now();
+                      final thisMonth = snapshot.data!.where((entry) {
+                        final entryDate = DateTime.parse(entry.date);
+                        return entryDate.year == now.year &&
+                            entryDate.month == now.month;
+                      }).length;
+                      return Text(
+                        '$thisMonth',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange,
+                        ),
+                      );
+                    }
+                    return const Text('--');
+                  },
+                ),
+                Icons.calendar_month,
+                Colors.orange,
+              )),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: _buildStatCard(
+                l10n.best,
+                FutureBuilder<List<DiaryEntry>>(
+                  future: DatabaseHelper().getAllEntries(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                      final best = snapshot.data!
+                          .map((e) => e.rating)
+                          .reduce((a, b) => a > b ? a : b);
+                      return Text(
+                        '$best',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.purple,
+                        ),
+                      );
+                    }
+                    return const Text('--');
+                  },
+                ),
+                Icons.emoji_events,
+                Colors.purple,
+              )),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(
+      String title, Widget valueWidget, IconData icon, Color color) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 8),
+            valueWidget,
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMotivationalCard() {
+    final messages = [
+      '🌅 La giornata è appena iniziata!',
+      '💪 Stai facendo un ottimo lavoro!',
+      '🎯 Ogni giorno è una nuova opportunità',
+      '✨ Le piccole cose fanno la differenza',
+      '🌱 Cresci un giorno alla volta',
+    ];
+
+    final randomMessage = messages[DateTime.now().day % messages.length];
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.teal.withOpacity(0.8),
+                Colors.cyan.withOpacity(0.6),
+              ],
+            ),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              const Icon(
+                Icons.lightbulb_outline,
+                color: Colors.white,
+                size: 32,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                randomMessage,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Torna alle 18:00 per valutare la tua giornata', // Sostituisci con l10n
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.9),
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+// Non dimenticare di aggiornare il dispose()
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    _keywordController.dispose();
+    _saveAnimationController.dispose();
+    _streakAnimationController.dispose();
+    _fireAnimationController.dispose();
+    super.dispose();
+  }
+
+  // Carica i dati dello streak
+  void _loadStreakData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentStreak = prefs.getInt('current_streak') ?? 0;
+    final bestStreak = prefs.getInt('best_streak') ?? 0;
+
+    setState(() {
+      _currentStreak = currentStreak;
+      _bestStreak = bestStreak;
+    });
+
+    // Anima lo streak se è maggiore di 0
+    if (_currentStreak > 0) {
+      _streakAnimationController.forward();
+    }
+  }
+
+  // Calcola lo streak basato sulle entries
+  Future<int> _calculateStreak() async {
+    final entries = await DatabaseHelper().getAllEntries();
+    if (entries.isEmpty) return 0;
+
+    // Ordina le entries per data (più recenti prima)
+    entries.sort(
+        (a, b) => DateTime.parse(b.date).compareTo(DateTime.parse(a.date)));
+
+    int streak = 0;
+    DateTime currentDate = DateTime.now();
+
+    for (var entry in entries) {
+      final entryDate = DateTime.parse(entry.date);
+      final daysDifference = _getDaysDifference(currentDate, entryDate);
+
+      if (daysDifference == streak) {
+        streak++;
+        currentDate = entryDate;
+      } else if (daysDifference > streak) {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
+  int _getDaysDifference(DateTime date1, DateTime date2) {
+    final day1 = DateTime(date1.year, date1.month, date1.day);
+    final day2 = DateTime(date2.year, date2.month, date2.day);
+    return day1.difference(day2).inDays;
+  }
+
+  Future<void> _updateStreak() async {
+    final newStreak = await _calculateStreak();
+    final prefs = await SharedPreferences.getInstance();
+
+    final wasNewStreak = newStreak > _currentStreak;
+    final isNewBest = newStreak > _bestStreak;
+
+    setState(() {
+      _isNewStreak = wasNewStreak;
+      _currentStreak = newStreak;
+      if (isNewBest) {
+        _bestStreak = newStreak;
+      }
+    });
+
+    await prefs.setInt('current_streak', _currentStreak);
+    await prefs.setInt('best_streak', _bestStreak);
+
+    // Anima lo streak se è nuovo o aumentato
+    if (wasNewStreak) {
+      _streakAnimationController.reset();
+      await _streakAnimationController.forward();
+
+      // Mostra celebrazione per milestone importanti
+      if (_currentStreak % 7 == 0 && _currentStreak > 0) {
+        _showStreakCelebration();
+      }
+    }
+  }
+
+  void _showStreakCelebration() {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedBuilder(
+              animation: _fireAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: 1.0 + (_fireAnimation.value * 0.1),
+                  child: const Text('🔥', style: TextStyle(fontSize: 60)),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.incredibileM,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.orange[700],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${l10n.recordD} $_currentStreak ${l10n.recordD1}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(l10n.fantastic, style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _loadTodayEntry() async {
     setState(() => _isLoading = true);
 
@@ -89,8 +717,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      debugPrint(
-          'Error loading today\'s entry: $e'); // Non-user-facing, no localization needed
+      debugPrint('Error loading today\'s entry: $e');
     }
   }
 
@@ -124,10 +751,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       }
 
       final entries = await DatabaseHelper().getAllEntries();
-      final averageRating = entries.isEmpty
+      final last10Entries =
+          entries.length > 10 ? entries.sublist(entries.length - 10) : entries;
+
+      final averageRating = last10Entries.isEmpty
           ? _rating
-          : (entries.map((e) => e.rating).reduce((a, b) => a + b) /
-                  entries.length)
+          : (last10Entries.map((e) => e.rating).reduce((a, b) => a + b) /
+                  last10Entries.length)
               .round();
 
       await WidgetService.saveAndUpdateWidget(
@@ -136,6 +766,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         keyword: _keyword,
       );
       await NotiService().cancelNotifications();
+
+      // Aggiorna lo streak
+      await _updateStreak();
+
       _loadTodayEntry();
 
       if (mounted) {
@@ -250,13 +884,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  @override
-  void dispose() {
-    _keywordController.dispose();
-    _saveAnimationController.dispose();
-    super.dispose();
-  }
-
   void _debugPrintAllEntries() async {
     final entries = await DatabaseHelper().getAllEntries();
     debugPrint('=== DEBUG: All entries ===');
@@ -309,6 +936,145 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final l10n = AppLocalizations.of(context)!;
     final formatter = DateFormat('EEEE, d MMMM', l10n.localeName);
     return formatter.format(now);
+  }
+
+  String _getStreakMessage() {
+    if (_currentStreak == 0) return AppLocalizations.of(context)!.startS;
+    if (_currentStreak == 1) return AppLocalizations.of(context)!.first;
+    if (_currentStreak < 7) return AppLocalizations.of(context)!.continua;
+    if (_currentStreak < 30) return AppLocalizations.of(context)!.incredibile;
+    return AppLocalizations.of(context)!.legend;
+  }
+
+  Widget _buildStreakCard() {
+    return AnimatedSize(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        child: AnimatedBuilder(
+          animation: Listenable.merge(
+              [_streakScaleAnimation, _streakOpacityAnimation]),
+          builder: (context, child) {
+            // Se l'opacità é molto bassa, restituisce un widget vuoto
+            if (_streakOpacityAnimation.value < 0.1) {
+              return const SizedBox.shrink();
+            }
+
+            return Transform.scale(
+              scale: _streakScaleAnimation.value,
+              child: Opacity(
+                opacity: _streakOpacityAnimation.value,
+                child: Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Card(
+                    elevation: 8,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.orange.withOpacity(0.8),
+                            Colors.red.withOpacity(0.6),
+                          ],
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    AppLocalizations.of(context)!.slancioDay,
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '$_currentStreak',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 36,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _currentStreak == 1
+                                            ? AppLocalizations.of(context)!.day
+                                            : AppLocalizations.of(context)!
+                                                .days,
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.9),
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Record',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.7),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  Text(
+                                    '$_bestStreak',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              _getStreakMessage(),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ));
   }
 
   Widget _buildStatusHeader() {
@@ -451,6 +1217,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       );
     }
 
+    // Se non è ancora ora di valutare la giornata, mostra la schermata di attesa
+    if (!_canRateToday()) {
+      return _buildWaitingScreen();
+    }
+
+    // Altrimenti mostra la normale schermata di valutazione
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -481,11 +1253,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildStatusHeader(),
+            _buildStreakCard(),
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Il resto del tuo codice esistente per le card di rating, emoji e keyword
                   Card(
                     elevation: 2,
                     shape: RoundedRectangleBorder(
@@ -627,20 +1401,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: EmojiPicker(
-                                  onEmojiSelected: (category, emoji) {
-                                    setState(() {
-                                      _emoji = emoji.emoji;
-                                      _showEmojiPicker = false;
-                                    });
-                                  },
-                                  config: Config(
-                                    columns: 8,
-                                    emojiSizeMax: 28,
-                                    bgColor: Colors.white,
-                                    indicatorColor: theme.primaryColor,
-                                    iconColorSelected: theme.primaryColor,
-                                  ),
-                                ),
+                                    onEmojiSelected: (category, emoji) {
+                                      setState(() {
+                                        _emoji = emoji.emoji;
+                                        _showEmojiPicker = false;
+                                      });
+                                    },
+                                    config: Config(
+                                      height: 256,
+                                      checkPlatformCompatibility: true,
+                                      emojiViewConfig: EmojiViewConfig(
+                                        emojiSizeMax: 28,
+                                        backgroundColor: Colors.white,
+                                        columns: 7,
+                                      ),
+                                      skinToneConfig: const SkinToneConfig(),
+                                      categoryViewConfig: CategoryViewConfig(
+                                        indicatorColor: theme.primaryColor,
+                                        iconColorSelected: theme.primaryColor,
+                                      ),
+                                    )),
                               ),
                             ),
                           ],
@@ -792,7 +1572,7 @@ class WidgetService {
       await HomeWidget.saveWidgetData('rating', rating);
       await HomeWidget.saveWidgetData('emoji', emoji);
       await HomeWidget.saveWidgetData(
-          'keyword', keyword.isEmpty ? 'Today' : keyword); // Localized in .arb?
+          'keyword', keyword.isEmpty ? 'Today' : keyword);
       await HomeWidget.saveWidgetData(
           'lastUpdate', DateTime.now().toIso8601String());
       await HomeWidget.updateWidget(

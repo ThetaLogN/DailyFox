@@ -85,7 +85,7 @@ class NotiService {
         now.year,
         now.month,
         now.day,
-        21,
+        18,
         00,
       );
 

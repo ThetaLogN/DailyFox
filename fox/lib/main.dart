@@ -1,29 +1,80 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
+import 'dart:ui' as ui;
 import 'package:DailyFox/noti_service.dart';
+import 'package:DailyFox/widget_bitmap.dart';
 import 'homePage.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+// Background entry point for WorkManager
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    WidgetsFlutterBinding.ensureInitialized();
+    const platform = MethodChannel('com.example.dailyfox/widget');
+    final prefs = await SharedPreferences.getInstance();
+    final rating = prefs.getInt('rating') ?? 7;
+    final animationPhase =
+        (DateTime.now().millisecondsSinceEpoch ~/ 5000 % 6).toInt();
+
+    try {
+      final image = await widgetToImage(rating, animationPhase);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final bytes = byteData!.buffer.asUint8List();
+      await platform.invokeMethod('updateWidget', {
+        'rating': rating,
+        'animationPhase': animationPhase,
+        'bitmap': bytes,
+      });
+    } catch (e) {
+      print('Error updating widget: $e');
+    }
+
+    return true;
+  });
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize notifications
   await NotiService().initNotifications();
+
+  // Initialize WorkManager for widget updates
+  await Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: false,
+  );
+
+  // Schedule periodic widget updates
+  Workmanager().registerPeriodicTask(
+    "fox_widget_update",
+    "updateFoxWidget",
+    frequency: const Duration(minutes: 1),
+    initialDelay: const Duration(seconds: 10),
+  );
+
+  // Initialize platform channel for widget
+  WidgetChannelHandler.initialize();
 
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      localizationsDelegates: [
+      localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: [
+      supportedLocales: const [
         Locale('en'),
         Locale('it'),
       ],
@@ -36,4 +87,33 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
     );
   }
+}
+
+class WidgetChannelHandler {
+  static const platform = MethodChannel('com.example.dailyfox/widget');
+
+  static void initialize() {
+    platform.setMethodCallHandler((call) async {
+      if (call.method == 'getWidgetBitmap') {
+        final args = call.arguments as Map;
+        final rating = args['rating'] as int? ?? 7;
+        final animationPhase = args['animationPhase'] as int? ?? 0;
+
+        final image = await widgetToImage(rating, animationPhase);
+        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+        return byteData!.buffer.asUint8List();
+      }
+      throw PlatformException(code: 'Unimplemented');
+    });
+  }
+}
+
+Future<void> saveRating(int rating) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setInt('rating', rating);
+}
+
+Future<int> getRating() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('rating') ?? 7;
 }

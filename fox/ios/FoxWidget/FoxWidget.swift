@@ -580,7 +580,7 @@ struct FoxWidget: Widget {
                     .background()
             }
         }
-        .configurationDisplayName("Volpe Anime dell'Umore 🦊")
+        .configurationDisplayName("DailyFox🦊")
 
         .supportedFamilies([.systemSmall, .systemMedium])
     }

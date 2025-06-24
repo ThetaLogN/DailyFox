@@ -225,7 +225,32 @@
     "placeholders": {
       "ratingText": {}
     }
-  }
+  },
+
+  "slancioDay":"Slancio Giornaliero",
+  "days":"Giorni",
+  "day":"Giorno",
+  "continua":"Continua cosi!",
+  "startS":"Inizia il tuo slancio!",
+  "first":"Primo giorno!",
+  "incredibile":"Incredibile slancio!",
+  "legend":"Sei una leggenda!",
+  "incredibileM":"Incredibile",
+  "recordD":"Hai raggiunto ",
+  "recordD1":"giorni consecutivi!",
+  "fantastic":"Fantastico!",
+  "endDay":"La giornata non è ancora finita!",
+  "timer":"Potrai valutare la giornata tra:",
+  "valutazioni":"Valutazioni",
+  "media":"Media",
+  "thisM":"Questo Mese",
+  "best":"Migliore"
+
+
+
+
+
+
 }
 
   

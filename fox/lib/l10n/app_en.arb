@@ -226,7 +226,25 @@
     "placeholders": {
       "ratingText": {}
     }
-  }
+  },
+  "slancioDay":"Daily Momentum",
+  "days":"Days",
+  "day":"Day",
+  "continua":"Keep it up!",
+  "startS":"Start your momentum!",
+  "first":"First Day!",
+  "incredibile":"Incredible momentum!",
+  "legend":"You are a legend!",
+  "incredibileM":"Incredible",
+  "recordD":"You have reached ",
+  "recordD1":"consecutive days!",
+  "fantastic":"Fantastic!",
+  "endDay":"The day isn't over yet!",
+  "timer":"You will be able to evaluate the day between:",
+  "valutazioni":"Ratings",
+  "media":"Average",
+  "thisM":"This Month",
+  "best":"Best"
 }
   
  
