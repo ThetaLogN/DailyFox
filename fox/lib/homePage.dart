@@ -5,6 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:DailyFox/calendarPage.dart';
 import 'package:DailyFox/noti_service.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/diary_entry.dart';
 import '../helpers/database_helper.dart';
@@ -41,6 +42,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late Animation<double> _streakOpacityAnimation;
   late Animation<double> _fireAnimation;
   late Animation<Color?> _streakColorAnimation;
+  final InAppPurchase _iap = InAppPurchase.instance;
+  ProductDetails? _product;
 
   // Configurazione widget iOS
   static const String appGroupId = "group.foxApp";
@@ -52,6 +55,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+
+    // _loadDonationProduct();
+    // _listenToPurchase();
 
     _saveAnimationController = AnimationController(
       duration: const Duration(milliseconds: 200),
@@ -113,15 +119,40 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _startCountdownTimer();
   }
 
+  /*Future<void> _loadDonationProduct() async {
+    final response = await _iap.queryProductDetails({'fox_tip_medium'});
+    if (response.productDetails.isNotEmpty) {
+      setState(() {
+        _product = response.productDetails.first;
+      });
+    }
+  }*/
+
+  /*void _listenToPurchase() {
+    _iap.purchaseStream.listen((purchases) {
+      for (final p in purchases) {
+        if (p.status == PurchaseStatus.purchased) {
+          _iap.completePurchase(p);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('🦊 Thank you for supporting DailyFox!')),
+          );
+        }
+      }
+    });
+  }*/
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     NotiService().scheduleNotification(context);
+    NotiService().scheduleNotification1(context);
+    NotiService().scheduleNotification2(context);
   }
 
   bool _canRateToday() {
     final now = DateTime.now();
-    return now.hour >= 18; // Dopo le 18:00
+    return now.hour >= 18;
   }
 
   void _updateCountdown() {
@@ -191,7 +222,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             _buildStatsCards(),
 
             // Messaggio motivazionale
-            _buildMotivationalCard(),
+            // _buildMotivationalCard(),
           ],
         ),
       ),
@@ -458,24 +489,31 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildStatCard(
       String title, Widget valueWidget, IconData icon, Color color) {
     return Card(
-      elevation: 2,
+      elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
+      child: Container(
+        width: 120,
+        height: 160,
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: color, size: 24),
             const SizedBox(height: 8),
-            valueWidget,
+            Flexible(child: valueWidget),
             const SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
+            Flexible(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
               ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -483,7 +521,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildMotivationalCard() {
+  /*Widget _buildMotivationalCard() {
     final messages = [
       '🌅 La giornata è appena iniziata!',
       '💪 Stai facendo un ottimo lavoro!',
@@ -543,9 +581,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
       ),
     );
-  }
+  }*/
 
-// Non dimenticare di aggiornare il dispose()
   @override
   void dispose() {
     _countdownTimer?.cancel();
@@ -575,7 +612,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   // Calcola lo streak basato sulle entries
   Future<int> _calculateStreak() async {
-    final entries = await DatabaseHelper().getAllEntries();
+    //final entries = await DatabaseHelper().getAllEntries();
+    //DatabaseHelper().printDatabase();
+    final entries = await DatabaseHelper().getAllEntriesWithSlancioTrue();
+
     if (entries.isEmpty) return 0;
 
     // Ordina le entries per data (più recenti prima)
@@ -583,27 +623,35 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         (a, b) => DateTime.parse(b.date).compareTo(DateTime.parse(a.date)));
 
     int streak = 0;
-    DateTime currentDate = DateTime.now();
+    DateTime today = DateTime.now();
+    DateTime checkDate = DateTime(today.year, today.month, today.day);
 
-    for (var entry in entries) {
+    // Controlla se c'è un entry per oggi
+    bool hasEntryToday = entries.any((entry) {
       final entryDate = DateTime.parse(entry.date);
-      final daysDifference = _getDaysDifference(currentDate, entryDate);
+      final entryDay = DateTime(entryDate.year, entryDate.month, entryDate.day);
+      return entryDay.isAtSameMomentAs(checkDate);
+    });
 
-      if (daysDifference == streak) {
+    // Se non c'è un entry per oggi, inizia dal giorno precedente
+    if (!hasEntryToday) {
+      checkDate = checkDate.subtract(const Duration(days: 1));
+    }
+
+    // Controlla i giorni consecutivi all'indietro
+    for (int i = 0; i < entries.length; i++) {
+      final entryDate = DateTime.parse(entries[i].date);
+      final entryDay = DateTime(entryDate.year, entryDate.month, entryDate.day);
+
+      if (entryDay.isAtSameMomentAs(checkDate)) {
         streak++;
-        currentDate = entryDate;
-      } else if (daysDifference > streak) {
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      } else if (entryDay.isBefore(checkDate)) {
         break;
       }
     }
 
     return streak;
-  }
-
-  int _getDaysDifference(DateTime date1, DateTime date2) {
-    final day1 = DateTime(date1.year, date1.month, date1.day);
-    final day2 = DateTime(date2.year, date2.month, date2.day);
-    return day1.difference(day2).inDays;
   }
 
   Future<void> _updateStreak() async {
@@ -624,8 +672,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     await prefs.setInt('current_streak', _currentStreak);
     await prefs.setInt('best_streak', _bestStreak);
 
-    // Anima lo streak se è nuovo o aumentato
-    if (wasNewStreak) {
+    // Anima lo streak se è cambiato
+    if (_currentStreak != newStreak || wasNewStreak) {
       _streakAnimationController.reset();
       await _streakAnimationController.forward();
 
@@ -736,12 +784,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     await _saveAnimationController.reverse();
 
     final entry = DiaryEntry(
-      id: _todayEntry?.id,
-      rating: _rating,
-      emoji: _emoji,
-      keyword: _keyword.trim(),
-      date: DateTime.now().toIso8601String(),
-    );
+        id: _todayEntry?.id,
+        rating: _rating,
+        emoji: _emoji,
+        keyword: _keyword.trim(),
+        date: DateTime.now().toIso8601String(),
+        slancio: true);
 
     try {
       if (_hasEntryToday && _todayEntry != null) {
@@ -750,7 +798,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         await DatabaseHelper().insertEntry(entry);
       }
 
+      await _updateStreak();
+
       final entries = await DatabaseHelper().getAllEntries();
+      //final entries = await DatabaseHelper().getAllEntriesWithSlancioTrue();
       final last10Entries =
           entries.length > 10 ? entries.sublist(entries.length - 10) : entries;
 
@@ -765,11 +816,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         emoji: _emoji,
         keyword: _keyword,
       );
+
       await NotiService().cancelNotifications();
+      await NotiService().cancelNotifications1();
+      await NotiService().cancelNotifications2();
 
-      // Aggiorna lo streak
-      await _updateStreak();
-
+      // Ricarica i dati per aggiornare l'UI
       _loadTodayEntry();
 
       if (mounted) {
@@ -816,6 +868,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _showResetDialog() {
     final l10n = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -863,35 +916,39 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ],
           ),
           actions: [
-            ElevatedButton(
+            TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
+              child: Text(
+                l10n.dialogButtonOK,
+                style: TextStyle(color: Theme.of(context).primaryColor),
+              ),
+            ),
+            /*ElevatedButton.icon(
+              onPressed: _product != null
+                  ? () {
+                      final param = PurchaseParam(productDetails: _product!);
+                      _iap.buyConsumable(purchaseParam: param);
+                      Navigator.of(context).pop(); // chiudi il dialog
+                    }
+                  : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
+                backgroundColor: Colors.orange.shade600,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(
-                l10n.dialogButtonOK,
+              icon: const Icon(Icons.volunteer_activism, color: Colors.white),
+              label: Text(
+                "Support DailyFox",
                 style: const TextStyle(color: Colors.white),
               ),
-            ),
+            ),*/
           ],
         );
       },
     );
-  }
-
-  void _debugPrintAllEntries() async {
-    final entries = await DatabaseHelper().getAllEntries();
-    debugPrint('=== DEBUG: All entries ===');
-    for (var entry in entries) {
-      debugPrint(
-          'ID: ${entry.id} | Rating: ${entry.rating} | Emoji: ${entry.emoji} | Keyword: ${entry.keyword} | Date: ${entry.date}');
-    }
-    debugPrint('=== End DEBUG ===');
   }
 
   void _showValidationError() {
@@ -1259,7 +1316,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Il resto del tuo codice esistente per le card di rating, emoji e keyword
                   Card(
                     elevation: 2,
                     shape: RoundedRectangleBorder(

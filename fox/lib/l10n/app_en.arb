@@ -16,6 +16,14 @@
   "@notificationBody": {
     "description": "Body of the daily notification"
   },
+  "notificationBody1": "HEY! The day is almost over, how was your day?",
+  "@notificationBody": {
+    "description": "Body of the daily notification"
+  },
+  "notificationBody2": "Attention, there are only 30 minutes left to evaluate your day.",
+  "@notificationBody": {
+    "description": "Body of the daily notification"
+  },
   "dialogTitleModifyRating": "Edit Rating",
   "@dialogTitleModifyRating": {
     "description": "Title of the dialog shown when modifying a rating"
@@ -244,7 +252,13 @@
   "valutazioni":"Ratings",
   "media":"Average",
   "thisM":"This Month",
-  "best":"Best"
+  "best":"Best",
+  "annulla":"Cancel",
+  "addedit":"Add rating for ",
+  "notedit":"You can't rate this day",
+  "addreting":"You can rate this day"
+
+
 }
   
  

@@ -111,11 +111,87 @@ class NotiService {
     }
   }
 
+  Future<void> scheduleNotification1(BuildContext context) async {
+    try {
+      final now = tz.TZDateTime.now(tz.local);
+      var scheduledDate = tz.TZDateTime(
+        tz.local,
+        now.year,
+        now.month,
+        now.day,
+        21,
+        00,
+      );
+
+      if (scheduledDate.isBefore(now)) {
+        scheduledDate = scheduledDate.add(const Duration(days: 1));
+      }
+
+      final l10n = AppLocalizations.of(context)!;
+
+      await notificationsPlugin.zonedSchedule(
+        1,
+        l10n.notificationTitle,
+        l10n.notificationBody1,
+        scheduledDate,
+        notificationDetails(),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } catch (e) {
+      print('Failed to schedule notification: $e');
+    }
+  }
+
+  Future<void> scheduleNotification2(BuildContext context) async {
+    try {
+      final now = tz.TZDateTime.now(tz.local);
+      var scheduledDate = tz.TZDateTime(
+        tz.local,
+        now.year,
+        now.month,
+        now.day,
+        23,
+        30,
+      );
+
+      if (scheduledDate.isBefore(now)) {
+        scheduledDate = scheduledDate.add(const Duration(days: 1));
+      }
+
+      final l10n = AppLocalizations.of(context)!;
+
+      await notificationsPlugin.zonedSchedule(
+        2,
+        l10n.notificationTitle,
+        l10n.notificationBody2,
+        scheduledDate,
+        notificationDetails(),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } catch (e) {
+      print('Failed to schedule notification: $e');
+    }
+  }
+
   Future<void> cancelNotificationsAll() async {
     await notificationsPlugin.cancelAll();
   }
 
   Future<void> cancelNotifications() async {
     await notificationsPlugin.cancel(0);
+  }
+
+  Future<void> cancelNotifications1() async {
+    await notificationsPlugin.cancel(1);
+  }
+
+  Future<void> cancelNotifications2() async {
+    await notificationsPlugin.cancel(2);
   }
 }

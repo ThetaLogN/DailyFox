@@ -16,6 +16,14 @@
   "@notificationBody": {
     "description": "Body of the daily notification"
   },
+  "notificationBody1": "Hey! La giornata è quasi finita, com’è andata oggi?",
+  "@notificationBody": {
+    "description": "Body of the daily notification"
+  },
+  "notificationBody2": "Attention, you only have 30 minutes left to evaluate your day",
+  "@notificationBody": {
+    "description": "Body of the daily notification"
+  },
   "dialogTitleModifyRating": "Modifica valutazione",
   "@dialogTitleModifyRating": {
     "description": "Title of the dialog shown when modifying a rating"
@@ -24,7 +32,7 @@
   "@dialogContentModifyRating": {
     "description": "Content of the dialog explaining the option to modify the day's rating"
   },
-  "dialogWidgetReminder": "Ricorda di aggiungere il widget alla schermata home per cooscere il tuo amico!",
+  "dialogWidgetReminder": "Ricorda di aggiungere il widget alla schermata home per conoscere il tuo amico!",
   "@dialogWidgetReminder": {
     "description": "Reminder in the dialog about adding the widget to the home screen"
   },
@@ -244,8 +252,14 @@
   "valutazioni":"Valutazioni",
   "media":"Media",
   "thisM":"Questo Mese",
-  "best":"Migliore"
+  "best":"Migliore",
+  "annulla":"Annulla",
+  "addedit":"Aggiungi valutazione per ",
+  "notedit":"Non puoi valutare questo giorno",
+  "addreting":"Puoi valutare questo giorno"
 
+
+  
 
 
 

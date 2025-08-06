@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import '../models/diary_entry.dart';
 import '../helpers/database_helper.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -75,6 +78,306 @@ class _CalendarPageState extends State<CalendarPage> {
     return formatter.format(date);
   }
 
+  bool _canAddEntry(DateTime date) {
+    final today = DateTime.now();
+    final dateOnly = DateTime(date.year, date.month, date.day);
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    return dateOnly.isBefore(todayOnly);
+  }
+
+  void _showAddEntryDialog(DateTime date) {
+    int selectedRating = 5;
+    String selectedEmoji = '😊';
+    String keyword = '';
+    final TextEditingController keywordController = TextEditingController();
+    bool showEmojiPicker = false;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final l10n = AppLocalizations.of(context)!;
+        final theme = Theme.of(context);
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                width: double.maxFinite,
+                constraints: BoxConstraints(
+                  maxWidth: 400,
+                  maxHeight: MediaQuery.of(context).size.height * 0.9,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${l10n.addedit}${_getFormattedDate(date)}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Content
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Sezione Rating
+                            Text(
+                              l10n.ratingCardTitle,
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Slider(
+                                    value: selectedRating.toDouble(),
+                                    min: 1,
+                                    max: 10,
+                                    divisions: 9,
+                                    label: '$selectedRating',
+                                    onChanged: (value) {
+                                      setStateDialog(() {
+                                        selectedRating = value.round();
+                                      });
+                                    },
+                                  ),
+                                ),
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: _getRatingColor(selectedRating),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '$selectedRating',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Sezione Emoji
+                            const Text(
+                              'Emoji:',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(height: 8),
+
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    setStateDialog(() {
+                                      showEmojiPicker = !showEmojiPicker;
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(12),
+                                      border:
+                                          Border.all(color: Colors.grey[300]!),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        selectedEmoji,
+                                        style: const TextStyle(fontSize: 30),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            // Emoji Picker
+                            if (showEmojiPicker)
+                              Container(
+                                height: 250,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: EmojiPicker(
+                                    onEmojiSelected: (category, emoji) {
+                                      setStateDialog(() {
+                                        selectedEmoji = emoji.emoji;
+                                        showEmojiPicker = false;
+                                      });
+                                    },
+                                    config: Config(
+                                      height: 256,
+                                      checkPlatformCompatibility: true,
+                                      emojiViewConfig: EmojiViewConfig(
+                                        emojiSizeMax: 28,
+                                        backgroundColor: Colors.white,
+                                        columns: 7,
+                                      ),
+                                      skinToneConfig: const SkinToneConfig(),
+                                      categoryViewConfig: CategoryViewConfig(
+                                        indicatorColor: theme.primaryColor,
+                                        iconColorSelected: theme.primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            const SizedBox(height: 16),
+
+                            // Sezione Keyword
+                            Text(
+                              l10n.keywordCardTitle,
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: keywordController,
+                              decoration: InputDecoration(
+                                hintText: l10n.keywordHintText,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                              ),
+                              onChanged: (value) {
+                                keyword = value;
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Actions
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text(l10n.annulla),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: () async {
+                              await _saveEntry(
+                                  date, selectedRating, selectedEmoji, keyword);
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _getRatingColor(selectedRating),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(l10n.saveButtonNew),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _saveEntry(
+      DateTime date, int rating, String emoji, String keyword) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final entry = DiaryEntry(
+        date: _getDateKey(date),
+        rating: rating,
+        emoji: emoji,
+        keyword: keyword.isNotEmpty ? keyword : null,
+        slancio: false,
+      );
+
+      await DatabaseHelper().insertEntry(entry);
+      await _loadEntries();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.snackBarUpdatedSuccess),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.snackBarSaveError),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Widget _buildCalendarCell(DateTime day, bool isToday, bool isSelected) {
     final dateKey = _getDateKey(day);
     final entry = _entries[dateKey];
@@ -145,6 +448,7 @@ class _CalendarPageState extends State<CalendarPage> {
     final entry = _entries[dateKey];
 
     if (entry == null) {
+      final canAddEntry = _canAddEntry(_selectedDay!);
       return Card(
         margin: const EdgeInsets.all(16),
         elevation: 2,
@@ -175,6 +479,52 @@ class _CalendarPageState extends State<CalendarPage> {
                   color: Colors.grey[500],
                 ),
               ),
+              const SizedBox(height: 16),
+              if (canAddEntry) ...[
+                ElevatedButton.icon(
+                  onPressed: () => _showAddEntryDialog(_selectedDay!),
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.addreting),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ] else ...[
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: Colors.orange[700],
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.notedit,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.orange[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -203,6 +553,7 @@ class _CalendarPageState extends State<CalendarPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
                     padding:
@@ -220,6 +571,12 @@ class _CalendarPageState extends State<CalendarPage> {
                       ),
                     ),
                   ),
+                  if (_canAddEntry(_selectedDay!))
+                    IconButton(
+                      onPressed: () => _showAddEntryDialog(_selectedDay!),
+                      icon: const Icon(Icons.edit),
+                      tooltip: 'Modifica valutazione',
+                    ),
                 ],
               ),
               const SizedBox(height: 20),

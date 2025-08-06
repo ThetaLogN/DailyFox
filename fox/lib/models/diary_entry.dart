@@ -4,6 +4,7 @@ class DiaryEntry {
   final String emoji;
   final String? keyword;
   final String date;
+  final bool slancio;
 
   DiaryEntry({
     this.id,
@@ -11,6 +12,7 @@ class DiaryEntry {
     required this.emoji,
     required this.keyword,
     required this.date,
+    required this.slancio,
   });
 
   Map<String, dynamic> toMap() {
@@ -20,6 +22,7 @@ class DiaryEntry {
       'emoji': emoji,
       'keyword': keyword,
       'date': date,
+      'slancio': slancio ? 1 : 0,
     };
   }
 
@@ -30,6 +33,7 @@ class DiaryEntry {
       emoji: map['emoji'],
       keyword: map['keyword'],
       date: map['date'],
+      slancio: map['slancio'] == 1,
     );
   }
 }
