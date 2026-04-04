@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
@@ -7,6 +5,7 @@ import '../models/diary_entry.dart';
 import '../helpers/database_helper.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
+import 'stats_page.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -22,6 +21,8 @@ class _CalendarPageState extends State<CalendarPage> {
   Map<String, DiaryEntry> _entries = {};
   bool _isLoading = true;
 
+
+
   @override
   void initState() {
     super.initState();
@@ -31,17 +32,14 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Future<void> _loadEntries() async {
     setState(() => _isLoading = true);
-
     try {
       final entries = await DatabaseHelper().getAllEntries();
       final entriesMap = <String, DiaryEntry>{};
-
       for (var entry in entries) {
         final date = DateTime.parse(entry.date);
         final dateKey = _getDateKey(date);
         entriesMap[dateKey] = entry;
       }
-
       setState(() {
         _entries = entriesMap;
         _isLoading = false;
@@ -78,11 +76,23 @@ class _CalendarPageState extends State<CalendarPage> {
     return formatter.format(date);
   }
 
+  /// Permette di aggiungere o modificare entry per oggi e per i giorni passati.
+  /// I giorni futuri non sono modificabili.
   bool _canAddEntry(DateTime date) {
     final today = DateTime.now();
     final dateOnly = DateTime(date.year, date.month, date.day);
     final todayOnly = DateTime(today.year, today.month, today.day);
-    return dateOnly.isBefore(todayOnly);
+    
+    // I giorni futuri non sono modificabili
+    if (dateOnly.isAfter(todayOnly)) return false; 
+    
+    // Se è oggi, permette la modifica solo dopo le 18:00
+    if (dateOnly == todayOnly) {
+      return today.hour >= 18;
+    }
+    
+    // I giorni passati sono sempre modificabili
+    return true;
   }
 
   void _showAddEntryDialog(DateTime date) {
@@ -116,7 +126,7 @@ class _CalendarPageState extends State<CalendarPage> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.grey[50],
+                        color: theme.colorScheme.surfaceContainerHighest,
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(16),
                           topRight: Radius.circular(16),
@@ -150,10 +160,10 @@ class _CalendarPageState extends State<CalendarPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Sezione Rating
+                            // Rating
                             Text(
                               l10n.ratingCardTitle,
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.w500),
                             ),
                             const SizedBox(height: 8),
@@ -195,14 +205,13 @@ class _CalendarPageState extends State<CalendarPage> {
                             ),
                             const SizedBox(height: 16),
 
-                            // Sezione Emoji
-                            const Text(
-                              'Emoji:',
-                              style: TextStyle(
+                            // Emoji
+                            Text(
+                              l10n.emojiLabel,
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.w500),
                             ),
                             const SizedBox(height: 8),
-
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -216,15 +225,18 @@ class _CalendarPageState extends State<CalendarPage> {
                                     width: 60,
                                     height: 60,
                                     decoration: BoxDecoration(
-                                      color: Colors.grey[100],
+                                      color: theme.colorScheme
+                                          .surfaceContainerHighest,
                                       borderRadius: BorderRadius.circular(12),
-                                      border:
-                                          Border.all(color: Colors.grey[300]!),
+                                      border: Border.all(
+                                          color:
+                                              theme.colorScheme.outlineVariant),
                                     ),
                                     child: Center(
                                       child: Text(
                                         selectedEmoji,
-                                        style: const TextStyle(fontSize: 30),
+                                        style:
+                                            const TextStyle(fontSize: 30),
                                       ),
                                     ),
                                   ),
@@ -234,13 +246,14 @@ class _CalendarPageState extends State<CalendarPage> {
 
                             const SizedBox(height: 8),
 
-                            // Emoji Picker
                             if (showEmojiPicker)
                               Container(
                                 height: 250,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.grey[300]!),
+                                  border: Border.all(
+                                      color:
+                                          theme.colorScheme.outlineVariant),
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
@@ -256,13 +269,17 @@ class _CalendarPageState extends State<CalendarPage> {
                                       checkPlatformCompatibility: true,
                                       emojiViewConfig: EmojiViewConfig(
                                         emojiSizeMax: 28,
-                                        backgroundColor: Colors.white,
+                                        backgroundColor:
+                                            theme.colorScheme.surface,
                                         columns: 7,
                                       ),
-                                      skinToneConfig: const SkinToneConfig(),
+                                      skinToneConfig:
+                                          const SkinToneConfig(),
                                       categoryViewConfig: CategoryViewConfig(
-                                        indicatorColor: theme.primaryColor,
-                                        iconColorSelected: theme.primaryColor,
+                                        indicatorColor:
+                                            theme.primaryColor,
+                                        iconColorSelected:
+                                            theme.primaryColor,
                                       ),
                                     ),
                                   ),
@@ -271,10 +288,10 @@ class _CalendarPageState extends State<CalendarPage> {
 
                             const SizedBox(height: 16),
 
-                            // Sezione Keyword
+                            // Keyword
                             Text(
                               l10n.keywordCardTitle,
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.w500),
                             ),
                             const SizedBox(height: 8),
@@ -285,7 +302,8 @@ class _CalendarPageState extends State<CalendarPage> {
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(
+                                contentPadding:
+                                    const EdgeInsets.symmetric(
                                   horizontal: 16,
                                   vertical: 12,
                                 ),
@@ -303,7 +321,8 @@ class _CalendarPageState extends State<CalendarPage> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.grey[50],
+                        color:
+                            theme.colorScheme.surfaceContainerHighest,
                         borderRadius: const BorderRadius.only(
                           bottomLeft: Radius.circular(16),
                           bottomRight: Radius.circular(16),
@@ -313,20 +332,21 @@ class _CalendarPageState extends State<CalendarPage> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
+                            onPressed: () => Navigator.of(context).pop(),
                             child: Text(l10n.annulla),
                           ),
                           const SizedBox(width: 12),
                           ElevatedButton(
                             onPressed: () async {
-                              await _saveEntry(
-                                  date, selectedRating, selectedEmoji, keyword);
-                              Navigator.of(context).pop();
+                              await _saveEntry(date, selectedRating,
+                                  selectedEmoji, keyword);
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                              }
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _getRatingColor(selectedRating),
+                              backgroundColor:
+                                  _getRatingColor(selectedRating),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -358,23 +378,26 @@ class _CalendarPageState extends State<CalendarPage> {
         keyword: keyword.isNotEmpty ? keyword : null,
         slancio: false,
       );
-
       await DatabaseHelper().insertEntry(entry);
       await _loadEntries();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.snackBarUpdatedSuccess),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.snackBarUpdatedSuccess),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.snackBarSaveError),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.snackBarSaveError),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -387,12 +410,14 @@ class _CalendarPageState extends State<CalendarPage> {
       margin: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: hasEntry
-            ? _getRatingColor(entry.rating).withOpacity(0.3)
-            : (isToday ? Colors.blue.withOpacity(0.1) : null),
+            ? _getRatingColor(entry.rating).withValues(alpha: 0.3)
+            : (isToday ? Colors.blue.withValues(alpha: 0.1) : null),
         border: Border.all(
           color: isSelected
               ? Colors.blue
-              : (isToday ? Colors.blue.withOpacity(0.5) : Colors.transparent),
+              : (isToday
+                  ? Colors.blue.withValues(alpha: 0.5)
+                  : Colors.transparent),
           width: isSelected ? 2 : 1,
         ),
         borderRadius: BorderRadius.circular(8),
@@ -406,7 +431,8 @@ class _CalendarPageState extends State<CalendarPage> {
               '${day.day}',
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                fontWeight:
+                    isToday ? FontWeight.bold : FontWeight.normal,
                 color: hasEntry
                     ? Colors.grey[800]
                     : (isToday ? Colors.blue : Colors.grey[600]),
@@ -442,13 +468,14 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Widget _buildSelectedDayDetails() {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
     if (_selectedDay == null) return const SizedBox.shrink();
 
     final dateKey = _getDateKey(_selectedDay!);
     final entry = _entries[dateKey];
 
     if (entry == null) {
-      final canAddEntry = _canAddEntry(_selectedDay!);
+      final canAdd = _canAddEntry(_selectedDay!);
       return Card(
         margin: const EdgeInsets.all(16),
         elevation: 2,
@@ -457,17 +484,13 @@ class _CalendarPageState extends State<CalendarPage> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              Icon(
-                Icons.calendar_today,
-                size: 48,
-                color: Colors.grey[400],
-              ),
+              Icon(Icons.calendar_today, size: 48, color: cs.onSurfaceVariant),
               const SizedBox(height: 12),
               Text(
                 l10n.noEntryMessage,
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: cs.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -476,11 +499,11 @@ class _CalendarPageState extends State<CalendarPage> {
                 _getFormattedDate(_selectedDay!),
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[500],
+                  color: cs.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 16),
-              if (canAddEntry) ...[
+              if (canAdd)
                 ElevatedButton.icon(
                   onPressed: () => _showAddEntryDialog(_selectedDay!),
                   icon: const Icon(Icons.add),
@@ -494,24 +517,22 @@ class _CalendarPageState extends State<CalendarPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                ),
-              ] else ...[
+                )
+              else
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                    border:
+                        Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 16,
-                        color: Colors.orange[700],
-                      ),
+                      Icon(Icons.info_outline,
+                          size: 16, color: Colors.orange[700]),
                       const SizedBox(width: 8),
                       Text(
                         l10n.notedit,
@@ -524,7 +545,6 @@ class _CalendarPageState extends State<CalendarPage> {
                     ],
                   ),
                 ),
-              ],
             ],
           ),
         ),
@@ -542,8 +562,8 @@ class _CalendarPageState extends State<CalendarPage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              _getRatingColor(entry.rating).withOpacity(0.1),
-              _getRatingColor(entry.rating).withOpacity(0.05),
+              _getRatingColor(entry.rating).withValues(alpha: 0.1),
+              _getRatingColor(entry.rating).withValues(alpha: 0.05),
             ],
           ),
         ),
@@ -556,10 +576,11 @@ class _CalendarPageState extends State<CalendarPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _getRatingColor(entry.rating).withOpacity(0.2),
+                      color:
+                          _getRatingColor(entry.rating).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -573,9 +594,10 @@ class _CalendarPageState extends State<CalendarPage> {
                   ),
                   if (_canAddEntry(_selectedDay!))
                     IconButton(
-                      onPressed: () => _showAddEntryDialog(_selectedDay!),
+                      onPressed: () =>
+                          _showAddEntryDialog(_selectedDay!),
                       icon: const Icon(Icons.edit),
-                      tooltip: 'Modifica valutazione',
+                      tooltip: l10n.modificaValutazione,
                     ),
                 ],
               ),
@@ -590,7 +612,8 @@ class _CalendarPageState extends State<CalendarPage> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: _getRatingColor(entry.rating).withOpacity(0.3),
+                          color:
+                              _getRatingColor(entry.rating).withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -612,9 +635,10 @@ class _CalendarPageState extends State<CalendarPage> {
                     width: 70,
                     height: 70,
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
+                      color: cs.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.grey[300]!, width: 2),
+                      border:
+                          Border.all(color: cs.outlineVariant, width: 2),
                     ),
                     child: Center(
                       child: Text(
@@ -642,7 +666,7 @@ class _CalendarPageState extends State<CalendarPage> {
                               _getRatingText(entry.rating).toLowerCase()),
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -656,27 +680,24 @@ class _CalendarPageState extends State<CalendarPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.7),
+                    color: cs.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[200]!),
+                    border: Border.all(color: cs.outlineVariant),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            Icons.label_outline,
-                            size: 18,
-                            color: Colors.grey[600],
-                          ),
+                          Icon(Icons.label_outline,
+                              size: 18, color: cs.onSurfaceVariant),
                           const SizedBox(width: 8),
                           Text(
                             l10n.keywordCardTitle,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Colors.grey[600],
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -684,10 +705,10 @@ class _CalendarPageState extends State<CalendarPage> {
                       const SizedBox(height: 8),
                       Text(
                         entry.keyword!,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: cs.onSurface,
                         ),
                       ),
                     ],
@@ -704,25 +725,32 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: cs.surface,
       appBar: AppBar(
         title: Text(
           l10n.calendarTitle,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.grey[800],
+        backgroundColor: cs.surface,
+        foregroundColor: cs.onSurface,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(
-            height: 1,
-            color: Colors.grey[200],
-          ),
+          child: Divider(height: 1, color: cs.outlineVariant),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart_rounded),
+            tooltip: 'Statistiche',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const StatsPage()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadEntries,
@@ -765,8 +793,11 @@ class _CalendarPageState extends State<CalendarPage> {
                         }
                       },
                       onPageChanged: (focusedDay) {
-                        _focusedDay = focusedDay;
+                        setState(() {
+                          _focusedDay = focusedDay;
+                        });
                       },
+
                       calendarBuilders: CalendarBuilders(
                         defaultBuilder: (context, day, focusedDay) {
                           return _buildCalendarCell(day, false, false);
@@ -780,29 +811,24 @@ class _CalendarPageState extends State<CalendarPage> {
                         },
                       ),
                       headerStyle: const HeaderStyle(
-                        formatButtonVisible: true,
+                        formatButtonVisible: false,
                         titleCentered: true,
-                        formatButtonShowsNext: false,
-                        formatButtonDecoration: BoxDecoration(
-                          color: Colors.blue,
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        ),
-                        formatButtonTextStyle: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
+                        leftChevronVisible: true,
+                        rightChevronVisible: true,
                       ),
                       calendarStyle: CalendarStyle(
                         outsideDaysVisible: false,
-                        weekendTextStyle: TextStyle(color: Colors.grey[600]),
-                        holidayTextStyle: TextStyle(color: Colors.grey[600]),
-                        defaultTextStyle: TextStyle(color: Colors.grey[800]),
+                        weekendTextStyle:
+                            TextStyle(color: cs.onSurfaceVariant),
+                        defaultTextStyle:
+                            TextStyle(color: cs.onSurface),
                         cellMargin: const EdgeInsets.all(4),
                         cellPadding: EdgeInsets.zero,
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 8),
                 Expanded(
                   child: SingleChildScrollView(
                     child: _buildSelectedDayDetails(),

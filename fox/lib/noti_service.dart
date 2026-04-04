@@ -1,5 +1,5 @@
 import 'dart:io' show Platform;
-import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -48,7 +48,7 @@ class NotiService {
       await notificationsPlugin.initialize(initSettings);
       _isInitialized = true;
     } catch (e) {
-      print('Failed to initialize notifications: $e');
+      debugPrint('Failed to initialize notifications: $e');
     }
   }
 
@@ -73,7 +73,7 @@ class NotiService {
     try {
       await notificationsPlugin.show(id, title, body, notificationDetails());
     } catch (e) {
-      print('Failed to show notification: $e');
+      debugPrint('Failed to show notification: $e');
     }
   }
 
@@ -107,7 +107,7 @@ class NotiService {
         matchDateTimeComponents: DateTimeComponents.time,
       );
     } catch (e) {
-      print('Failed to schedule notification: $e');
+      debugPrint('Failed to schedule notification: $e');
     }
   }
 
@@ -141,7 +141,7 @@ class NotiService {
         matchDateTimeComponents: DateTimeComponents.time,
       );
     } catch (e) {
-      print('Failed to schedule notification: $e');
+      debugPrint('Failed to schedule notification: $e');
     }
   }
 
@@ -175,7 +175,7 @@ class NotiService {
         matchDateTimeComponents: DateTimeComponents.time,
       );
     } catch (e) {
-      print('Failed to schedule notification: $e');
+      debugPrint('Failed to schedule notification: $e');
     }
   }
 

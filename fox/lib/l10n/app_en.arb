@@ -17,12 +17,12 @@
     "description": "Body of the daily notification"
   },
   "notificationBody1": "HEY! The day is almost over, how was your day?",
-  "@notificationBody": {
-    "description": "Body of the daily notification"
+  "@notificationBody1": {
+    "description": "Body of the second daily notification"
   },
   "notificationBody2": "Attention, there are only 30 minutes left to evaluate your day.",
-  "@notificationBody": {
-    "description": "Body of the daily notification"
+  "@notificationBody2": {
+    "description": "Body of the third daily notification"
   },
   "dialogTitleModifyRating": "Edit Rating",
   "@dialogTitleModifyRating": {
@@ -83,6 +83,10 @@
   "emojiCardTapToChange": "Tap to change",
   "@emojiCardTapToChange": {
     "description": "Text prompting the user to tap to change the emoji"
+  },
+  "emojiLabel": "Emoji",
+  "@emojiLabel": {
+    "description": "Label for the emoji picker section"
   },
   "keywordCardTitle": "Keyword of the Day",
   "@keywordCardTitle": {
@@ -113,113 +117,9 @@
     "description": "Error message when the keyword field is empty"
   },
   "snackBarSaveError": "Error saving",
-
-  
-  "appTitleModifyDay": "Edit your day",
-  "@appTitleModifyDay": {
-    "description": "Title displayed in the app bar when modifying an existing day's entry"
+  "@snackBarSaveError": {
+    "description": "Error message when saving fails"
   },
-  "appTitleNewDay": "How was your day?",
-  "@appTitleNewDay": {
-    "description": "Title displayed in the app bar when creating a new day's entry"
-  },
-  "notificationTitle": "Fox",
-  "@notificationTitle": {
-    "description": "Title of the daily notification"
-  },
-  "notificationBody": "Hey! Don't forget to tell me about your day!",
-  "@notificationBody": {
-    "description": "Body of the daily notification"
-  },
-  "dialogTitleModifyRating": "Edit Rating",
-  "@dialogTitleModifyRating": {
-    "description": "Title of the dialog shown when modifying a rating"
-  },
-  "dialogContentModifyRating": "Want to edit today's rating? You can change the score, emoji, and keyword.",
-  "@dialogContentModifyRating": {
-    "description": "Content of the dialog explaining the option to modify the day's rating"
-  },
-  "dialogWidgetReminder": "Remember to add the widget to your home screen to get to know your friend!",
-  "@dialogWidgetReminder": {
-    "description": "Reminder in the dialog about adding the widget to the home screen"
-  },
-  "dialogButtonOK": "OK",
-  "@dialogButtonOK": {
-    "description": "Button text for confirming the dialog"
-  },
-  "statusHeaderToday": "How was your day?",
-  "@statusHeaderToday": {
-    "description": "Text in the status header when no entry exists for today"
-  },
-  "statusHeaderRated": "You've already rated today!",
-  "@statusHeaderRated": {
-    "description": "Text in the status header when an entry exists for today"
-  },
-  "statusHeaderNoKeyword": "No keyword",
-  "@statusHeaderNoKeyword": {
-    "description": "Text displayed when no keyword is set for the day"
-  },
-  "ratingCardTitle": "Day's Rating",
-  "@ratingCardTitle": {
-    "description": "Title of the card for selecting the day's rating"
-  },
-  "ratingTextTerrible": "Terrible",
-  "@ratingTextTerrible": {
-    "description": "Rating text for scores 1-2"
-  },
-  "ratingTextBad": "Tough",
-  "@ratingTextBad": {
-    "description": "Rating text for scores 3-4"
-  },
-  "ratingTextAverage": "Average",
-  "@ratingTextAverage": {
-    "description": "Rating text for scores 5-6"
-  },
-  "ratingTextGood": "Good",
-  "@ratingTextGood": {
-    "description": "Rating text for scores 7-8"
-  },
-  "ratingTextGreat": "Fantastic",
-  "@ratingTextGreat": {
-    "description": "Rating text for scores 9-10"
-  },
-  "emojiCardTitle": "Emoji of the Day",
-  "@emojiCardTitle": {
-    "description": "Title of the card for selecting the day's emoji"
-  },
-  "emojiCardTapToChange": "Tap to change",
-  "@emojiCardTapToChange": {
-    "description": "Text prompting the user to tap to change the emoji"
-  },
-  "keywordCardTitle": "Keyword of the Day",
-  "@keywordCardTitle": {
-    "description": "Title of the card for entering the day's keyword"
-  },
-  "keywordHintText": "E.g., relax, work, family...",
-  "@keywordHintText": {
-    "description": "Hint text for the keyword text field"
-  },
-  "saveButtonNew": "Save My Day",
-  "@saveButtonNew": {
-    "description": "Text on the save button when creating a new entry"
-  },
-  "saveButtonUpdate": "Update My Day",
-  "@saveButtonUpdate": {
-    "description": "Text on the save button when updating an existing entry"
-  },
-  "snackBarSavedSuccess": "Day saved successfully!",
-  "@snackBarSavedSuccess": {
-    "description": "Success message when a new entry is saved"
-  },
-  "snackBarUpdatedSuccess": "Day updated successfully!",
-  "@snackBarUpdatedSuccess": {
-    "description": "Success message when an existing entry is updated"
-  },
-  "snackBarValidationError": "Enter a keyword to complete",
-  "@snackBarValidationError": {
-    "description": "Error message when the keyword field is empty"
-  },
-
   "calendarTitle": "My Days",
   "@calendarTitle": {
     "description": "Title displayed in the app bar of the calendar page"
@@ -230,35 +130,97 @@
   },
   "dayRatingLabel": "Day {ratingText}",
   "@dayRatingLabel": {
-    "description": "Label for the rating text of a selected day, with a placeholder for the rating description",
+    "description": "Label for the rating text of a selected day",
     "placeholders": {
       "ratingText": {}
     }
   },
-  "slancioDay":"Daily Momentum",
-  "days":"Days",
-  "day":"Day",
-  "continua":"Keep it up!",
-  "startS":"Start your momentum!",
-  "first":"First Day!",
-  "incredibile":"Incredible momentum!",
-  "legend":"You are a legend!",
-  "incredibileM":"Incredible",
-  "recordD":"You have reached ",
-  "recordD1":"consecutive days!",
-  "fantastic":"Fantastic!",
-  "endDay":"The day isn't over yet!",
-  "timer":"You will be able to evaluate the day between:",
-  "valutazioni":"Ratings",
-  "media":"Average",
-  "thisM":"This Month",
-  "best":"Best",
-  "annulla":"Cancel",
-  "addedit":"Add rating for ",
-  "notedit":"You can't rate this day",
-  "addreting":"You can rate this day"
-
-
+  "slancioDay": "Daily Momentum",
+  "days": "Days",
+  "day": "Day",
+  "continua": "Keep it up!",
+  "startS": "Start your momentum!",
+  "first": "First Day!",
+  "incredibile": "Incredible momentum!",
+  "legend": "You are a legend!",
+  "incredibileM": "Incredible",
+  "recordD": "You have reached ",
+  "recordD1": "consecutive days!",
+  "fantastic": "Fantastic!",
+  "endDay": "The day isn't over yet!",
+  "timer": "You will be able to evaluate the day between:",
+  "valutazioni": "Ratings",
+  "media": "Average",
+  "thisM": "This Month",
+  "best": "Best",
+  "annulla": "Cancel",
+  "addedit": "Add rating for ",
+  "notedit": "You can't rate this day",
+  "addreting": "You can rate this day",
+  "limitatomese": "Limited to the current month",
+  "abbonamentoPremium": "Premium Subscription",
+  "sbloccalef": "Unlock all features with Premium:",
+  "accesDay": "Unlimited access to all months and years",
+  "publicita": "No ads",
+  "cancella": "Cancel anytime • No commitment",
+  "abbonati": "Subscribe",
+  "piuTarsi": "Later",
+  "price": "€4.99/month",
+  "abbonamentoPremium1": "Subscribe to Premium to view all months",
+  "versioneG": "Free Version",
+  "limitatomesec": "Limited to the current month",
+  "modificaValutazione": "Edit Rating",
+  "error": "Error",
+  "subscriptionNotAvailable": "This feature is not yet available. Stay tuned!",
+  "subscriptionError": "Activation error. Please try again.",
+  "badgesPageTitle": "Your Achievements",
+  "badgesCollectionTitle": "Badge Collection",
+  "badgesUnlocked": "{count} / {total} unlocked",
+  "@badgesUnlocked": {
+    "placeholders": { "count": {}, "total": {} }
+  },
+  "badgesNextMilestone": "Next milestone",
+  "badgesDaysLeft": "{days} days left",
+  "@badgesDaysLeft": {
+    "placeholders": { "days": {} }
+  },
+  "badgesAllUnlocked": "You unlocked all badges! You're a legend!",
+  "badgeUnlocked": "Badge Unlocked!",
+  "badgeUnlockedButton": "Awesome!",
+  "badgeDays": "{n} {n, plural, =1{day} other{days}}",
+  "@badgeDays": {
+    "placeholders": { "n": {} }
+  },
+  "badgeNameFirstStep": "First Step",
+  "badgeDescFirstStep": "You recorded your first momentum day!",
+  "badgeNameOnFire": "On Fire",
+  "badgeDescOnFire": "3 consecutive momentum days. You're doing great!",
+  "badgeNameRisingStar": "Rising Star",
+  "badgeDescRisingStar": "A full week of momentum. Fantastic!",
+  "badgeNameConsistent": "Consistent",
+  "badgeDescConsistent": "Two consecutive weeks! Consistency is your strength.",
+  "badgeNameChampion": "Champion",
+  "badgeDescChampion": "A full month of momentum! You're a true champion.",
+  "badgeNameDiamond": "Diamond",
+  "badgeDescDiamond": "60 consecutive days. You're as precious as a diamond!",
+  "badgeNameFoxElite": "Fox Elite",
+  "badgeDescFoxElite": "100 momentum days! You've entered the fox elite.",
+  "badgeNameLegend": "Legend",
+  "badgeDescLegend": "365 momentum days. You are an absolute legend!",
+  "statsPageTitle": "Statistics",
+  "statsMoodTrend": "Mood Trend",
+  "statsTopKeywords": "Top Keywords",
+  "statsBestDay": "Best Day of the Week",
+  "statsMonthlyComparison": "Monthly Comparison",
+  "statsNoData": "Not enough data yet.\nStart recording your days!",
+  "statsWeekFilter": "7 days",
+  "statsMonthFilter": "30 days",
+  "statsThreeMonthFilter": "3 months",
+  "statsAverageRating": "Avg",
+  "statsEntries": "entries",
+  "statsBestDayLabel": "Your happiest day",
+  "statsNoKeywords": "No keywords recorded yet",
+  "statsUsages": "uses",
+  "statsMonthAvg": "Average",
+  "statsNoMonthData": "No data for this period"
 }
-  
- 

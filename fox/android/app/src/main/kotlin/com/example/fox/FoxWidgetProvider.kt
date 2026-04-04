@@ -43,7 +43,7 @@ class FoxWidgetProvider : AppWidgetProvider() {
                 val bytes = result as? ByteArray
                 if (bytes != null) {
                     val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                    val views = RemoteViews(context.packageName, R.layout.widget_layout) // Line 43
+                    val views = RemoteViews(context.packageName, R.layout.fox_widget) // Line 43
                     views.setImageViewBitmap(R.id.widget_image, bitmap) // Line 44
                     appWidgetManager.updateAppWidget(appWidgetId, views)
                 }

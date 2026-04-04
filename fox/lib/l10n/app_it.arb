@@ -16,13 +16,13 @@
   "@notificationBody": {
     "description": "Body of the daily notification"
   },
-  "notificationBody1": "Hey! La giornata è quasi finita, com’è andata oggi?",
-  "@notificationBody": {
-    "description": "Body of the daily notification"
+  "notificationBody1": "Hey! La giornata è quasi finita, com'è andata oggi?",
+  "@notificationBody1": {
+    "description": "Body of the second daily notification"
   },
-  "notificationBody2": "Attention, you only have 30 minutes left to evaluate your day",
-  "@notificationBody": {
-    "description": "Body of the daily notification"
+  "notificationBody2": "Attenzione, hai solo 30 minuti per valutare la tua giornata",
+  "@notificationBody2": {
+    "description": "Body of the third daily notification"
   },
   "dialogTitleModifyRating": "Modifica valutazione",
   "@dialogTitleModifyRating": {
@@ -84,6 +84,10 @@
   "@emojiCardTapToChange": {
     "description": "Text prompting the user to tap to change the emoji"
   },
+  "emojiLabel": "Emoji",
+  "@emojiLabel": {
+    "description": "Label for the emoji picker section"
+  },
   "keywordCardTitle": "Parola del giorno",
   "@keywordCardTitle": {
     "description": "Title of the card for entering the day's keyword"
@@ -113,112 +117,9 @@
     "description": "Error message when the keyword field is empty"
   },
   "snackBarSaveError": "Errore nel salvataggio",
-  
-  "appTitleModifyDay": "Modifica la tua giornata",
-  "@appTitleModifyDay": {
-    "description": "Title displayed in the app bar when modifying an existing day's entry"
+  "@snackBarSaveError": {
+    "description": "Error message when saving fails"
   },
-  "appTitleNewDay": "Come è andata oggi?",
-  "@appTitleNewDay": {
-    "description": "Title displayed in the app bar when creating a new day's entry"
-  },
-  "notificationTitle": "Fox",
-  "@notificationTitle": {
-    "description": "Title of the daily notification"
-  },
-  "notificationBody": "Hey!! ricordati di fammi sapere come è andata la tua giornata",
-  "@notificationBody": {
-    "description": "Body of the daily notification"
-  },
-  "dialogTitleModifyRating": "Modifica valutazione",
-  "@dialogTitleModifyRating": {
-    "description": "Title of the dialog shown when modifying a rating"
-  },
-  "dialogContentModifyRating": "Vuoi modificare la valutazione di oggi? Potrai cambiare il voto, l'emoji e la parola chiave.",
-  "@dialogContentModifyRating": {
-    "description": "Content of the dialog explaining the option to modify the day's rating"
-  },
-  "dialogWidgetReminder": "Ricorda di aggiungere il widget alla schermata home per cooscere il tuo amico!",
-  "@dialogWidgetReminder": {
-    "description": "Reminder in the dialog about adding the widget to the home screen"
-  },
-  "dialogButtonOK": "OK",
-  "@dialogButtonOK": {
-    "description": "Button text for confirming the dialog"
-  },
-  "statusHeaderToday": "Come è andata oggi?",
-  "@statusHeaderToday": {
-    "description": "Text in the status header when no entry exists for today"
-  },
-  "statusHeaderRated": "Hai già valutato oggi!",
-  "@statusHeaderRated": {
-    "description": "Text in the status header when an entry exists for today"
-  },
-  "statusHeaderNoKeyword": "Nessuna parola",
-  "@statusHeaderNoKeyword": {
-    "description": "Text displayed when no keyword is set for the day"
-  },
-  "ratingCardTitle": "Voto della giornata",
-  "@ratingCardTitle": {
-    "description": "Title of the card for selecting the day's rating"
-  },
-  "ratingTextTerrible": "Pessima",
-  "@ratingTextTerrible": {
-    "description": "Rating text for scores 1-2"
-  },
-  "ratingTextBad": "Difficile",
-  "@ratingTextBad": {
-    "description": "Rating text for scores 3-4"
-  },
-  "ratingTextAverage": "Nella media",
-  "@ratingTextAverage": {
-    "description": "Rating text for scores 5-6"
-  },
-  "ratingTextGood": "Buona",
-  "@ratingTextGood": {
-    "description": "Rating text for scores 7-8"
-  },
-  "ratingTextGreat": "Fantastica",
-  "@ratingTextGreat": {
-    "description": "Rating text for scores 9-10"
-  },
-  "emojiCardTitle": "Emoji del giorno",
-  "@emojiCardTitle": {
-    "description": "Title of the card for selecting the day's emoji"
-  },
-  "emojiCardTapToChange": "Tocca per cambiare",
-  "@emojiCardTapToChange": {
-    "description": "Text prompting the user to tap to change the emoji"
-  },
-  "keywordCardTitle": "Parola del giorno",
-  "@keywordCardTitle": {
-    "description": "Title of the card for entering the day's keyword"
-  },
-  "keywordHintText": "Es: relax, lavoro, famiglia...",
-  "@keywordHintText": {
-    "description": "Hint text for the keyword text field"
-  },
-  "saveButtonNew": "Salva la mia giornata",
-  "@saveButtonNew": {
-    "description": "Text on the save button when creating a new entry"
-  },
-  "saveButtonUpdate": "Aggiorna la mia giornata",
-  "@saveButtonUpdate": {
-    "description": "Text on the save button when updating an existing entry"
-  },
-  "snackBarSavedSuccess": "Giornata salvata con successo!",
-  "@snackBarSavedSuccess": {
-    "description": "Success message when a new entry is saved"
-  },
-  "snackBarUpdatedSuccess": "Giornata aggiornata con successo!",
-  "@snackBarUpdatedSuccess": {
-    "description": "Success message when an existing entry is updated"
-  },
-  "snackBarValidationError": "Inserisci una parola per completare",
-  "@snackBarValidationError": {
-    "description": "Error message when the keyword field is empty"
-  },
-  
   "calendarTitle": "Le mie giornate",
   "@calendarTitle": {
     "description": "Title displayed in the app bar of the calendar page"
@@ -229,43 +130,97 @@
   },
   "dayRatingLabel": "Giorno {ratingText}",
   "@dayRatingLabel": {
-    "description": "Label for the rating text of a selected day, with a placeholder for the rating description",
+    "description": "Label for the rating text of a selected day",
     "placeholders": {
       "ratingText": {}
     }
   },
-
-  "slancioDay":"Slancio Giornaliero",
-  "days":"Giorni",
-  "day":"Giorno",
-  "continua":"Continua cosi!",
-  "startS":"Inizia il tuo slancio!",
-  "first":"Primo giorno!",
-  "incredibile":"Incredibile slancio!",
-  "legend":"Sei una leggenda!",
-  "incredibileM":"Incredibile",
-  "recordD":"Hai raggiunto ",
-  "recordD1":"giorni consecutivi!",
-  "fantastic":"Fantastico!",
-  "endDay":"La giornata non è ancora finita!",
-  "timer":"Potrai valutare la giornata tra:",
-  "valutazioni":"Valutazioni",
-  "media":"Media",
-  "thisM":"Questo Mese",
-  "best":"Migliore",
-  "annulla":"Annulla",
-  "addedit":"Aggiungi valutazione per ",
-  "notedit":"Non puoi valutare questo giorno",
-  "addreting":"Puoi valutare questo giorno"
-
-
-  
-
-
-
-
-
+  "slancioDay": "Slancio Giornaliero",
+  "days": "Giorni",
+  "day": "Giorno",
+  "continua": "Continua così!",
+  "startS": "Inizia il tuo slancio!",
+  "first": "Primo giorno!",
+  "incredibile": "Incredibile slancio!",
+  "legend": "Sei una leggenda!",
+  "incredibileM": "Incredibile",
+  "recordD": "Hai raggiunto ",
+  "recordD1": "giorni consecutivi!",
+  "fantastic": "Fantastico!",
+  "endDay": "La giornata non è ancora finita!",
+  "timer": "Potrai valutare la giornata tra:",
+  "valutazioni": "Valutazioni",
+  "media": "Media",
+  "thisM": "Questo Mese",
+  "best": "Migliore",
+  "annulla": "Annulla",
+  "addedit": "Aggiungi valutazione per ",
+  "notedit": "Non puoi valutare questo giorno",
+  "addreting": "Puoi valutare questo giorno",
+  "limitatomese": "Limitato al mese corrente",
+  "abbonamentoPremium": "Abbonamento Premium",
+  "sbloccalef": "Sblocca tutte le funzionalità con Premium:",
+  "accesDay": "Accesso illimitato a tutti i mesi e anni",
+  "publicita": "Nessuna pubblicità",
+  "cancella": "Cancella in qualsiasi momento • Nessun impegno",
+  "abbonati": "Abbonati",
+  "piuTarsi": "Più tardi",
+  "price": "€4.99/mese",
+  "abbonamentoPremium1": "Abbonati a Premium per vedere tutti i mesi",
+  "versioneG": "Versione Gratuita",
+  "limitatomesec": "Limitato al mese corrente",
+  "modificaValutazione": "Modifica Valutazione",
+  "error": "Errore",
+  "subscriptionNotAvailable": "Questa funzione non è ancora disponibile. A presto!",
+  "subscriptionError": "Errore durante l'attivazione. Riprova.",
+  "badgesPageTitle": "I tuoi Traguardi",
+  "badgesCollectionTitle": "Badge Collection",
+  "badgesUnlocked": "{count} / {total} sbloccati",
+  "@badgesUnlocked": {
+    "placeholders": { "count": {}, "total": {} }
+  },
+  "badgesNextMilestone": "Prossimo traguardo",
+  "badgesDaysLeft": "{days} giorni mancanti",
+  "@badgesDaysLeft": {
+    "placeholders": { "days": {} }
+  },
+  "badgesAllUnlocked": "Hai sbloccato tutti i badge! Sei una leggenda!",
+  "badgeUnlocked": "Badge Sbloccato!",
+  "badgeUnlockedButton": "Ottimo!",
+  "badgeDays": "{n} {n, plural, =1{giorno} other{giorni}}",
+  "@badgeDays": {
+    "placeholders": { "n": {} }
+  },
+  "badgeNameFirstStep": "Primo Passo",
+  "badgeDescFirstStep": "Hai registrato il tuo primo giorno di slancio!",
+  "badgeNameOnFire": "In Fiamme",
+  "badgeDescOnFire": "3 giorni consecutivi di slancio. Stai andando alla grande!",
+  "badgeNameRisingStar": "Stella Nascente",
+  "badgeDescRisingStar": "Una settimana completa di slancio. Fantastico!",
+  "badgeNameConsistent": "Costante",
+  "badgeDescConsistent": "Due settimane consecutive! La costanza è la tua forza.",
+  "badgeNameChampion": "Campione",
+  "badgeDescChampion": "Un mese intero di slancio! Sei un vero campione.",
+  "badgeNameDiamond": "Diamante",
+  "badgeDescDiamond": "60 giorni consecutivi. Sei prezioso come un diamante!",
+  "badgeNameFoxElite": "Fox Elite",
+  "badgeDescFoxElite": "100 giorni di slancio! Sei entrato nell'élite delle volpi.",
+  "badgeNameLegend": "Leggenda",
+  "badgeDescLegend": "365 giorni di slancio. Sei una leggenda assoluta!",
+  "statsPageTitle": "Statistiche",
+  "statsMoodTrend": "Andamento Umore",
+  "statsTopKeywords": "Parole Chiave più usate",
+  "statsBestDay": "Giorno Migliore della Settimana",
+  "statsMonthlyComparison": "Confronto Mensile",
+  "statsNoData": "Non ci sono ancora abbastanza dati.\nInizia a registrare le tue giornate!",
+  "statsWeekFilter": "7 giorni",
+  "statsMonthFilter": "30 giorni",
+  "statsThreeMonthFilter": "3 mesi",
+  "statsAverageRating": "Media",
+  "statsEntries": "voci",
+  "statsBestDayLabel": "Il tuo giorno più felice",
+  "statsNoKeywords": "Nessuna parola chiave registrata",
+  "statsUsages": "usi",
+  "statsMonthAvg": "Media",
+  "statsNoMonthData": "Nessun dato per questo periodo"
 }
-
-  
-  

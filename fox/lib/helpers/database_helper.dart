@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/diary_entry.dart';
@@ -96,7 +97,7 @@ class DatabaseHelper {
     final db = await database;
     final List<Map<String, dynamic>> result = await db.query('diary_entries');
     for (var row in result) {
-      print(row);
+      debugPrint(row.toString());
     }
   }
 }

@@ -29,7 +29,7 @@ void callbackDispatcher() {
         'bitmap': bytes,
       });
     } catch (e) {
-      print('Error updating widget: $e');
+      debugPrint('Error updating widget: $e');
     }
 
     return true;
@@ -50,15 +50,14 @@ void main() async {
 
   // Schedule periodic widget updates
   Workmanager().registerPeriodicTask(
-    "fox_widget_update",
-    "updateFoxWidget",
-    frequency: const Duration(minutes: 1),
+    'fox_widget_update',
+    'updateFoxWidget',
+    frequency: const Duration(minutes: 15),
     initialDelay: const Duration(seconds: 10),
   );
 
   // Initialize platform channel for widget
   WidgetChannelHandler.initialize();
-
   runApp(const MyApp());
 }
 
@@ -77,12 +76,29 @@ class MyApp extends StatelessWidget {
       supportedLocales: const [
         Locale('en'),
         Locale('it'),
+        Locale('fr'),
+        Locale('de'),
+        Locale('zh'),
+        Locale('ru'),
+        Locale('ja'),
+        Locale('es'),
       ],
       title: 'DailyFox',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.indigo,
+          brightness: Brightness.light,
+        ),
         useMaterial3: true,
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.indigo,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      themeMode: ThemeMode.system,
       home: const HomePage(),
       debugShowCheckedModeBanner: false,
     );

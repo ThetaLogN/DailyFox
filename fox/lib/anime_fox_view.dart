@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class AnimeFoxView extends StatelessWidget {
+/*class AnimeFoxView extends StatelessWidget {
   final int rating;
   final int animationPhase;
 
@@ -753,4 +753,28 @@ class MouthPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}*/
+
+class AnimeFoxView extends StatelessWidget {
+  final int rating;
+  final int animationPhase;
+
+  const AnimeFoxView(
+      {super.key, required this.rating, required this.animationPhase});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 100,
+      height: 100,
+      color: Colors.blue,
+      child: Center(
+        child: Text(
+          'Rating: $rating\nPhase: $animationPhase',
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
 }

@@ -7,8 +7,10 @@ Future<ui.Image> widgetToImage(int rating, int animationPhase) async {
   // Create a GlobalKey for the RepaintBoundary
   final GlobalKey repaintBoundaryKey = GlobalKey();
 
-  // Create the widget tree with RepaintBoundary
-  final widget = RepaintBoundary(
+  // Create the widget tree with RepaintBoundary.
+  // The tree is attached to a synthetic render pipeline below — the variable
+  // is intentionally unused as a reference after creation.
+  RepaintBoundary(
     key: repaintBoundaryKey,
     child: MediaQuery(
       data: const MediaQueryData(),
