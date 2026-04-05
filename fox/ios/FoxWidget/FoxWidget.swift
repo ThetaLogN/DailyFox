@@ -15,7 +15,8 @@ struct Provider: TimelineProvider {
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
         let userDefaults = UserDefaults(suiteName: "group.foxApp")
-        let rating = userDefaults?.integer(forKey: "rating") ?? 7
+        let ratingString = userDefaults?.string(forKey: "rating") ?? "7"
+        let rating = Int(ratingString) ?? 7
         
         let entry = SimpleEntry(date: Date(), rating: rating, animationPhase: 0)
         completion(entry)
@@ -23,7 +24,8 @@ struct Provider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         let userDefaults = UserDefaults(suiteName: "group.foxApp")
-        let rating = userDefaults?.integer(forKey: "rating") ?? 7
+        let ratingString = userDefaults?.string(forKey: "rating") ?? "7"
+        let rating = Int(ratingString) ?? 7
         
         var entries: [SimpleEntry] = []
         let currentDate = Date()
