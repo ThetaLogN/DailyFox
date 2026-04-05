@@ -36,6 +36,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final TextEditingController _keywordController = TextEditingController();
   late AnimationController _saveAnimationController;
   late Animation<double> _saveAnimation;
+  
 
   // Streak
   int _currentStreak = 0;
@@ -148,7 +149,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _loadStreakData() async {
     final prefs = await SharedPreferences.getInstance();
-    final currentStreak = prefs.getInt('current_streak') ?? 0;
+    final currentStreak = await _calculateStreak();
+    
+    // Aggiorna le prefs se lo streak è sceso (es. ha saltato un giorno)
+    await prefs.setInt('current_streak', currentStreak);
+    
     final bestStreak = prefs.getInt('best_streak') ?? 0;
     setState(() {
       _currentStreak = currentStreak;
@@ -1111,8 +1116,8 @@ class WidgetService {
     required String keyword,
   }) async {
     try {
-      await HomeWidget.setAppGroupId('group.foxApp');
-      await HomeWidget.saveWidgetData('rating', rating);
+      await HomeWidget.setAppGroupId('group.com.giorgiomartucci.DailyFox');
+      await HomeWidget.saveWidgetData<String>('rating', rating.toString());
       await HomeWidget.saveWidgetData('emoji', emoji);
       await HomeWidget.saveWidgetData(
           'keyword', keyword.isEmpty ? 'Today' : keyword);

@@ -14,7 +14,7 @@ struct Provider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let userDefaults = UserDefaults(suiteName: "group.foxApp")
+        let userDefaults = UserDefaults(suiteName: "group.com.giorgiomartucci.DailyFox")
         let ratingString = userDefaults?.string(forKey: "rating") ?? "7"
         let rating = Int(ratingString) ?? 7
         
@@ -23,7 +23,7 @@ struct Provider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        let userDefaults = UserDefaults(suiteName: "group.foxApp")
+        let userDefaults = UserDefaults(suiteName: "group.com.giorgiomartucci.DailyFox")
         let ratingString = userDefaults?.string(forKey: "rating") ?? "7"
         let rating = Int(ratingString) ?? 7
         
@@ -531,7 +531,6 @@ struct FoxWidgetEntryView: View {
             
             AnimeFoxView(rating: entry.rating, animationPhase: entry.animationPhase)
         }
-        .widgetURL(URL(string: "dailyfox://open"))
     }
     
     private func backgroundColors(for rating: Int) -> [Color] {
