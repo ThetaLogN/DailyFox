@@ -132,5 +132,8 @@
   "statsNoKeywords": "Noch keine Schlüsselwörter",
   "statsUsages": "Verwendungen",
   "statsMonthAvg": "Durchschnitt",
-  "statsNoMonthData": "Keine Daten für diesen Zeitraum"
+  "statsNoMonthData": "Keine Daten für diesen Zeitraum",
+  "impostazioni": "Einstellungen",
+  "modalitaScura": "Dunkelmodus",
+  "modalitaChiara": "Heller Modus"
 }

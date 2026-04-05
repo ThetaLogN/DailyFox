@@ -132,5 +132,8 @@
   "statsNoKeywords": "まだキーワードなし",
   "statsUsages": "回",
   "statsMonthAvg": "平均",
-  "statsNoMonthData": "この期間のデータなし"
+  "statsNoMonthData": "この期間のデータなし",
+  "impostazioni": "設定",
+  "modalitaScura": "ダークモード",
+  "modalitaChiara": "ライトモード"
 }

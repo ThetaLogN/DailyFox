@@ -529,6 +529,7 @@ struct FoxWidgetEntryView: View {
             
             AnimeFoxView(rating: entry.rating, animationPhase: entry.animationPhase)
         }
+        .widgetURL(URL(string: "dailyfox://open"))
     }
     
     private func backgroundColors(for rating: Int) -> [Color] {

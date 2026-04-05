@@ -132,5 +132,8 @@
   "statsNoKeywords": "Ключевых слов пока нет",
   "statsUsages": "раз",
   "statsMonthAvg": "Среднее",
-  "statsNoMonthData": "Нет данных за этот период"
+  "statsNoMonthData": "Нет данных за этот период",
+  "impostazioni": "Настройки",
+  "modalitaScura": "Темный режим",
+  "modalitaChiara": "Светлый режим"
 }

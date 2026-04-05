@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:DailyFox/calendarPage.dart';
+import 'package:DailyFox/main.dart';
 import 'package:DailyFox/noti_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/diary_entry.dart';
@@ -419,9 +420,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: Text(
-            l10n.dialogTitleModifyRating,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+          titlePadding: const EdgeInsets.only(left: 8, top: 16, right: 24, bottom: 8),
+          title: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.impostazioni,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -453,17 +466,35 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+              ValueListenableBuilder<ThemeMode>(
+                valueListenable: themeNotifier,
+                builder: (_, ThemeMode currentMode, __) {
+                  final isDark = currentMode == ThemeMode.dark ||
+                      (currentMode == ThemeMode.system &&
+                          Theme.of(context).brightness == Brightness.dark);
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Theme.of(context).dividerColor),
+                    ),
+                    child: SwitchListTile(
+                      title: Text(isDark ? l10n.modalitaScura : l10n.modalitaChiara),
+                      secondary: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
+                      value: isDark,
+                      activeColor: Colors.blue,
+                      onChanged: (value) async {
+                        final prefs = await SharedPreferences.getInstance();
+                        themeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
+                        await prefs.setBool('isDark', value);
+                      },
+                    ),
+                  );
+                },
+              ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                l10n.dialogButtonOK,
-                style: TextStyle(color: Theme.of(context).primaryColor),
-              ),
-            ),
-          ],
         );
       },
     );
@@ -523,6 +554,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: cs.surface,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
           l10n.appTitleNewDay,
           style: const TextStyle(fontWeight: FontWeight.w600),
@@ -547,7 +579,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.info_outline),
+            icon: const Icon(Icons.settings_outlined),
             onPressed: _showResetDialog,
           ),
         ],
@@ -714,6 +746,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: cs.surface,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
           _hasEntryToday ? l10n.appTitleModifyDay : l10n.appTitleNewDay,
           style: const TextStyle(fontWeight: FontWeight.w600),
@@ -738,7 +771,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.info_outline),
+            icon: const Icon(Icons.settings_outlined),
             onPressed: _showResetDialog,
           ),
         ],

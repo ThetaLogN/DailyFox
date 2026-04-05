@@ -10,7 +10,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 // Background entry point for WorkManager
-void callbackDispatcher() {
+/*void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     WidgetsFlutterBinding.ensureInitialized();
     const platform = MethodChannel('com.example.dailyfox/widget');
@@ -34,7 +34,9 @@ void callbackDispatcher() {
 
     return true;
   });
-}
+}*/
+
+final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,19 +44,12 @@ void main() async {
   // Initialize notifications
   await NotiService().initNotifications();
 
-  // Initialize WorkManager for widget updates
-  await Workmanager().initialize(
-    callbackDispatcher,
-    isInDebugMode: false,
-  );
-
-  // Schedule periodic widget updates
-  Workmanager().registerPeriodicTask(
-    'fox_widget_update',
-    'updateFoxWidget',
-    frequency: const Duration(minutes: 15),
-    initialDelay: const Duration(seconds: 10),
-  );
+  // Load theme preference
+  final prefs = await SharedPreferences.getInstance();
+  final isDark = prefs.getBool('isDark');
+  if (isDark != null) {
+    themeNotifier.value = isDark ? ThemeMode.dark : ThemeMode.light;
+  }
 
   // Initialize platform channel for widget
   WidgetChannelHandler.initialize();
@@ -66,41 +61,46 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('en'),
-        Locale('it'),
-        Locale('fr'),
-        Locale('de'),
-        Locale('zh'),
-        Locale('ru'),
-        Locale('ja'),
-        Locale('es'),
-      ],
-      title: 'DailyFox',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
-      themeMode: ThemeMode.system,
-      home: const HomePage(),
-      debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (_, ThemeMode currentMode, __) {
+        return MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('en'),
+            Locale('it'),
+            Locale('fr'),
+            Locale('de'),
+            Locale('zh'),
+            Locale('ru'),
+            Locale('ja'),
+            Locale('es'),
+          ],
+          title: 'DailyFox',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.indigo,
+              brightness: Brightness.light,
+            ),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.indigo,
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+          ),
+          themeMode: currentMode,
+          home: const HomePage(),
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 }

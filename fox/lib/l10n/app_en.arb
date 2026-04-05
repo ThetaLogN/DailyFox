@@ -222,5 +222,8 @@
   "statsNoKeywords": "No keywords recorded yet",
   "statsUsages": "uses",
   "statsMonthAvg": "Average",
-  "statsNoMonthData": "No data for this period"
+  "statsNoMonthData": "No data for this period",
+  "impostazioni": "Settings",
+  "modalitaScura": "Dark Mode",
+  "modalitaChiara": "Light Mode"
 }

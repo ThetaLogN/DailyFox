@@ -132,5 +132,8 @@
   "statsNoKeywords": "还没有记录关键词",
   "statsUsages": "次",
   "statsMonthAvg": "平均",
-  "statsNoMonthData": "该时段无数据"
+  "statsNoMonthData": "该时段无数据",
+  "impostazioni": "设置",
+  "modalitaScura": "深色模式",
+  "modalitaChiara": "浅色模式"
 }

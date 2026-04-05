@@ -132,5 +132,8 @@
   "statsNoKeywords": "Aucun mot-clé enregistré",
   "statsUsages": "utilisations",
   "statsMonthAvg": "Moyenne",
-  "statsNoMonthData": "Pas de données pour cette période"
+  "statsNoMonthData": "Pas de données pour cette période",
+  "impostazioni": "Paramètres",
+  "modalitaScura": "Mode Sombre",
+  "modalitaChiara": "Mode Clair"
 }

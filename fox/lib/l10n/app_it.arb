@@ -222,5 +222,8 @@
   "statsNoKeywords": "Nessuna parola chiave registrata",
   "statsUsages": "usi",
   "statsMonthAvg": "Media",
-  "statsNoMonthData": "Nessun dato per questo periodo"
+  "statsNoMonthData": "Nessun dato per questo periodo",
+  "impostazioni": "Impostazioni",
+  "modalitaScura": "Modalità Scura",
+  "modalitaChiara": "Modalità Chiara"
 }
