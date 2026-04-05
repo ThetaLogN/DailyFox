@@ -104,39 +104,40 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<void> _migrateAppGroup() async {
-  final prefs = await SharedPreferences.getInstance();
-  final migrated = prefs.getBool('appGroupMigrated') ?? false;
-  
-  if (!migrated) {
-    // Leggi i dati dal vecchio gruppo
-    await HomeWidget.setAppGroupId('group.foxApp');
-    final oldRating = await HomeWidget.getWidgetData<int>('rating');
-    final oldEmoji = await HomeWidget.getWidgetData<String>('emoji');
-    final oldKeyword = await HomeWidget.getWidgetData<String>('keyword');
+    final prefs = await SharedPreferences.getInstance();
+    final migrated = prefs.getBool('appGroupMigrated') ?? false;
+    
+    if (!migrated) {
+      // Leggi i dati dal vecchio gruppo
+      await HomeWidget.setAppGroupId('group.foxApp');
+      final oldRatingRaw = await HomeWidget.getWidgetData<dynamic>('rating');
+      final oldRating = oldRatingRaw != null ? int.tryParse(oldRatingRaw.toString()) : null;
+      final oldEmoji = await HomeWidget.getWidgetData<String>('emoji');
+      final oldKeyword = await HomeWidget.getWidgetData<String>('keyword');
 
-    // Scrivi nel nuovo gruppo
-    await HomeWidget.setAppGroupId('group.com.giorgiomartucci.DailyFox');
-    if (oldRating != null) {
-      await HomeWidget.saveWidgetData<String>('rating', oldRating.toString());
-    }
-    if (oldEmoji != null) {
-      await HomeWidget.saveWidgetData<String>('emoji', oldEmoji);
-    }
-    if (oldKeyword != null) {
-      await HomeWidget.saveWidgetData<String>('keyword', oldKeyword);
-    }
+      // Scrivi nel nuovo gruppo
+      await HomeWidget.setAppGroupId('group.com.giorgiomartucci.DailyFox');
+      if (oldRating != null) {
+        await HomeWidget.saveWidgetData<String>('rating', oldRating.toString());
+      }
+      if (oldEmoji != null) {
+        await HomeWidget.saveWidgetData<String>('emoji', oldEmoji);
+      }
+      if (oldKeyword != null) {
+        await HomeWidget.saveWidgetData<String>('keyword', oldKeyword);
+      }
 
-    // Aggiorna il widget con i nuovi dati
-    await HomeWidget.updateWidget(
-      name: 'FoxWidget',
-      iOSName: 'FoxWidget',
-    );
+      // Aggiorna il widget con i nuovi dati
+      await HomeWidget.updateWidget(
+        name: 'FoxWidget',
+        iOSName: 'FoxWidget',
+      );
 
-    // Segna la migrazione come completata
-    await prefs.setBool('appGroupMigrated', true);
-    debugPrint('App Group migrated successfully');
+      // Segna la migrazione come completata
+      await prefs.setBool('appGroupMigrated', true);
+      debugPrint('App Group migrated successfully');
+    }
   }
-}
 
   @override
   void didChangeDependencies() {
