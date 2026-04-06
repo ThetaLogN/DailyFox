@@ -8,6 +8,7 @@ import 'package:DailyFox/widget_bitmap.dart';
 import 'homePage.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:DailyFox/helpers/database_helper.dart';
 
 // Background entry point for WorkManager
 /*void callbackDispatcher() {
@@ -43,6 +44,7 @@ void main() async {
 
   // Initialize notifications
   await NotiService().initNotifications();
+  await DatabaseHelper().cleanDuplicatedEntries();
 
   // Load theme preference
   final prefs = await SharedPreferences.getInstance();

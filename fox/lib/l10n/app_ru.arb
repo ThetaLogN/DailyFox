@@ -135,5 +135,14 @@
   "statsNoMonthData": "Нет данных за этот период",
   "impostazioni": "Настройки",
   "modalitaScura": "Темный режим",
-  "modalitaChiara": "Светлый режим"
+  "modalitaChiara": "Светлый режим",
+  "shareBadgeButton": "Share",
+  "shareBadgeText": "I just unlocked the {badgeName} badge {emoji} on DailyFox for a {streak} days momentum! 🎉",
+  "@shareBadgeText": {
+    "placeholders": {
+      "badgeName": {},
+      "emoji": {},
+      "streak": {}
+    }
+  }
 }

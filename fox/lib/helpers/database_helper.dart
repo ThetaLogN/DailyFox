@@ -93,6 +93,32 @@ class DatabaseHelper {
     await db.delete('diary_entries');
   }
 
+  Future<void> cleanDuplicatedEntries() async {
+    final db = await database;
+    final entries = await getAllEntries();
+    
+    // Group by date prefix (YYYY-MM-DD)
+    final map = <String, List<DiaryEntry>>{};
+    for (var entry in entries) {
+      if (entry.date.length >= 10) {
+        final dateKey = entry.date.substring(0, 10);
+        map.putIfAbsent(dateKey, () => []).add(entry);
+      }
+    }
+    
+    // For each date with multiple entries, keep the last one (highest id) and delete the rest
+    for (var dateKey in map.keys) {
+      final list = map[dateKey]!;
+      if (list.length > 1) {
+        list.sort((a, b) => (a.id ?? 0).compareTo(b.id ?? 0));
+        // Keep the last one, delete others
+        for (int i = 0; i < list.length - 1; i++) {
+          await db.delete('diary_entries', where: 'id = ?', whereArgs: [list[i].id]);
+        }
+      }
+    }
+  }
+
   void printDatabase() async {
     final db = await database;
     final List<Map<String, dynamic>> result = await db.query('diary_entries');

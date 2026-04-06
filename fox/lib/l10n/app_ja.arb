@@ -135,5 +135,14 @@
   "statsNoMonthData": "この期間のデータなし",
   "impostazioni": "設定",
   "modalitaScura": "ダークモード",
-  "modalitaChiara": "ライトモード"
+  "modalitaChiara": "ライトモード",
+  "shareBadgeButton": "Share",
+  "shareBadgeText": "I just unlocked the {badgeName} badge {emoji} on DailyFox for a {streak} days momentum! 🎉",
+  "@shareBadgeText": {
+    "placeholders": {
+      "badgeName": {},
+      "emoji": {},
+      "streak": {}
+    }
+  }
 }

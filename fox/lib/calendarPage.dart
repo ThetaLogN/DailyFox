@@ -371,14 +371,23 @@ class _CalendarPageState extends State<CalendarPage> {
       DateTime date, int rating, String emoji, String keyword) async {
     final l10n = AppLocalizations.of(context)!;
     try {
+      final dateKey = _getDateKey(date);
+      final existingEntry = _entries[dateKey];
+      
       final entry = DiaryEntry(
-        date: _getDateKey(date),
+        id: existingEntry?.id,
+        date: existingEntry?.date ?? dateKey,
         rating: rating,
         emoji: emoji,
         keyword: keyword.isNotEmpty ? keyword : null,
-        slancio: false,
+        slancio: existingEntry?.slancio ?? false,
       );
-      await DatabaseHelper().insertEntry(entry);
+      
+      if (existingEntry?.id != null) {
+        await DatabaseHelper().updateEntry(entry);
+      } else {
+        await DatabaseHelper().insertEntry(entry);
+      }
       await _loadEntries();
 
       if (mounted) {

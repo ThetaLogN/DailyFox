@@ -177,19 +177,26 @@
   "badgesCollectionTitle": "Badge Collection",
   "badgesUnlocked": "{count} / {total} sbloccati",
   "@badgesUnlocked": {
-    "placeholders": { "count": {}, "total": {} }
+    "placeholders": {
+      "count": {},
+      "total": {}
+    }
   },
   "badgesNextMilestone": "Prossimo traguardo",
   "badgesDaysLeft": "{days} giorni mancanti",
   "@badgesDaysLeft": {
-    "placeholders": { "days": {} }
+    "placeholders": {
+      "days": {}
+    }
   },
   "badgesAllUnlocked": "Hai sbloccato tutti i badge! Sei una leggenda!",
   "badgeUnlocked": "Badge Sbloccato!",
   "badgeUnlockedButton": "Ottimo!",
   "badgeDays": "{n} {n, plural, =1{giorno} other{giorni}}",
   "@badgeDays": {
-    "placeholders": { "n": {} }
+    "placeholders": {
+      "n": {}
+    }
   },
   "badgeNameFirstStep": "Primo Passo",
   "badgeDescFirstStep": "Hai registrato il tuo primo giorno di slancio!",
@@ -225,5 +232,14 @@
   "statsNoMonthData": "Nessun dato per questo periodo",
   "impostazioni": "Impostazioni",
   "modalitaScura": "Modalità Scura",
-  "modalitaChiara": "Modalità Chiara"
+  "modalitaChiara": "Modalità Chiara",
+  "shareBadgeButton": "Condividi",
+  "shareBadgeText": "Ho appena sbloccato il badge {badgeName} {emoji} su DailyFox per uno slancio di {streak} giorni! 🎉",
+  "@shareBadgeText": {
+    "placeholders": {
+      "badgeName": {},
+      "emoji": {},
+      "streak": {}
+    }
+  }
 }

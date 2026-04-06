@@ -177,19 +177,26 @@
   "badgesCollectionTitle": "Badge Collection",
   "badgesUnlocked": "{count} / {total} unlocked",
   "@badgesUnlocked": {
-    "placeholders": { "count": {}, "total": {} }
+    "placeholders": {
+      "count": {},
+      "total": {}
+    }
   },
   "badgesNextMilestone": "Next milestone",
   "badgesDaysLeft": "{days} days left",
   "@badgesDaysLeft": {
-    "placeholders": { "days": {} }
+    "placeholders": {
+      "days": {}
+    }
   },
   "badgesAllUnlocked": "You unlocked all badges! You're a legend!",
   "badgeUnlocked": "Badge Unlocked!",
   "badgeUnlockedButton": "Awesome!",
   "badgeDays": "{n} {n, plural, =1{day} other{days}}",
   "@badgeDays": {
-    "placeholders": { "n": {} }
+    "placeholders": {
+      "n": {}
+    }
   },
   "badgeNameFirstStep": "First Step",
   "badgeDescFirstStep": "You recorded your first momentum day!",
@@ -225,5 +232,14 @@
   "statsNoMonthData": "No data for this period",
   "impostazioni": "Settings",
   "modalitaScura": "Dark Mode",
-  "modalitaChiara": "Light Mode"
+  "modalitaChiara": "Light Mode",
+  "shareBadgeButton": "Share",
+  "shareBadgeText": "I just unlocked the {badgeName} badge {emoji} on DailyFox for a {streak} days momentum! 🎉",
+  "@shareBadgeText": {
+    "placeholders": {
+      "badgeName": {},
+      "emoji": {},
+      "streak": {}
+    }
+  }
 }

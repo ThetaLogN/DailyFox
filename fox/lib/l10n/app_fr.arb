@@ -135,5 +135,14 @@
   "statsNoMonthData": "Pas de données pour cette période",
   "impostazioni": "Paramètres",
   "modalitaScura": "Mode Sombre",
-  "modalitaChiara": "Mode Clair"
+  "modalitaChiara": "Mode Clair",
+  "shareBadgeButton": "Partager",
+  "shareBadgeText": "Je viens de débloquer le badge {badgeName} {emoji} sur DailyFox pour un élan de {streak} jours ! 🎉",
+  "@shareBadgeText": {
+    "placeholders": {
+      "badgeName": {},
+      "emoji": {},
+      "streak": {}
+    }
+  }
 }

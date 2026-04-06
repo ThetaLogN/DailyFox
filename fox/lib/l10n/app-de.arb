@@ -135,5 +135,14 @@
   "statsNoMonthData": "Keine Daten für diesen Zeitraum",
   "impostazioni": "Einstellungen",
   "modalitaScura": "Dunkelmodus",
-  "modalitaChiara": "Heller Modus"
+  "modalitaChiara": "Heller Modus",
+  "shareBadgeButton": "Teilen",
+  "shareBadgeText": "Ich habe gerade das {badgeName} Abzeichen {emoji} auf DailyFox für {streak} Tage Schwung freigeschaltet! 🎉",
+  "@shareBadgeText": {
+    "placeholders": {
+      "badgeName": {},
+      "emoji": {},
+      "streak": {}
+    }
+  }
 }
