@@ -14,18 +14,29 @@ struct Provider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let userDefaults = UserDefaults(suiteName: "group.com.giorgiomartucci.DailyFox")
-        let ratingString = userDefaults?.string(forKey: "rating") ?? "7"
-        let rating = Int(ratingString) ?? 7
+        var userDefaults = UserDefaults(suiteName: "group.com.giorgiomartucci.DailyFox")
+        var ratingString = userDefaults?.string(forKey: "rating")
         
+        if ratingString == nil {
+            userDefaults = UserDefaults(suiteName: "group.foxApp")
+            ratingString = userDefaults?.string(forKey: "rating")
+        }
+        
+        let rating = Int(ratingString ?? "7") ?? 7
         let entry = SimpleEntry(date: Date(), rating: rating, animationPhase: 0)
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        let userDefaults = UserDefaults(suiteName: "group.com.giorgiomartucci.DailyFox")
-        let ratingString = userDefaults?.string(forKey: "rating") ?? "7"
-        let rating = Int(ratingString) ?? 7
+        var userDefaults = UserDefaults(suiteName: "group.com.giorgiomartucci.DailyFox")
+        var ratingString = userDefaults?.string(forKey: "rating")
+        
+        if ratingString == nil {
+            userDefaults = UserDefaults(suiteName: "group.foxApp")
+            ratingString = userDefaults?.string(forKey: "rating")
+        }
+        
+        let rating = Int(ratingString ?? "7") ?? 7
         
         var entries: [SimpleEntry] = []
         let currentDate = Date()
@@ -568,7 +579,11 @@ struct FoxWidgetEntryView: View {
     var entry: Provider.Entry
     
     var body: some View {
-        AnimeFoxView(rating: entry.rating, animationPhase: entry.animationPhase)
+        ZStack {
+            FoxWidgetBackground(rating: entry.rating)
+            AnimeFoxView(rating: entry.rating, animationPhase: entry.animationPhase)
+        }
+        .widgetURL(URL(string: "dailyfox://open"))
     }
 }
 
@@ -579,14 +594,9 @@ struct FoxWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             if #available(iOS 17.0, *) {
                 FoxWidgetEntryView(entry: entry)
-                    .containerBackground(for: .widget) {
-                        FoxWidgetBackground(rating: entry.rating)
-                    }
+                    .containerBackground(.clear, for: .widget)
             } else {
-                ZStack {
-                    FoxWidgetBackground(rating: entry.rating)
-                    FoxWidgetEntryView(entry: entry)
-                }
+                FoxWidgetEntryView(entry: entry)
             }
         }
         .configurationDisplayName("DailyFox🦊")
