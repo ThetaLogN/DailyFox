@@ -7,6 +7,11 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class NotiService {
+  // Singleton — stessa istanza in tutta l'app
+  static final NotiService _instance = NotiService._internal();
+  factory NotiService() => _instance;
+  NotiService._internal();
+
   final notificationsPlugin = FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
 
@@ -77,62 +82,44 @@ class NotiService {
     }
   }
 
-  Future<void> scheduleNotification(BuildContext context) async {
-    try {
-      final now = tz.TZDateTime.now(tz.local);
-      var scheduledDate = tz.TZDateTime(
-        tz.local,
-        now.year,
-        now.month,
-        now.day,
-        18,
-        00,
-      );
-
-      if (scheduledDate.isBefore(now)) {
-        scheduledDate = scheduledDate.add(const Duration(days: 1));
-      }
-
-      final l10n = AppLocalizations.of(context)!;
-
-      await notificationsPlugin.zonedSchedule(
-        0,
-        l10n.notificationTitle,
-        l10n.notificationBody,
-        scheduledDate,
-        notificationDetails(),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
-    } catch (e) {
-      debugPrint('Failed to schedule notification: $e');
+  /// Schedula o cancella le notifiche in base a [hasEntryToday].
+  /// Se l'utente ha già valutato la giornata, tutte le notifiche vengono
+  /// cancellate. Altrimenti vengono schedate normalmente.
+  ///
+  /// Le stringhe localizzate vengono estratte sincronamente da [context]
+  /// prima di qualsiasi operazione asincrona.
+  Future<void> scheduleAllNotifications(BuildContext context, {required bool hasEntryToday}) async {
+    if (hasEntryToday) {
+      // L'utente ha già valutato → cancella tutte le notifiche per oggi
+      await cancelNotificationsAll();
+      return;
     }
+
+    // Estraiamo le stringhe localizzate sincronamente prima degli await
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      debugPrint('NotiService: AppLocalizations not available yet, skipping schedule');
+      return;
+    }
+
+    await _scheduleAt(0, 18, 00, l10n.notificationTitle, l10n.notificationBody);
+    await _scheduleAt(1, 21, 00, l10n.notificationTitle, l10n.notificationBody1);
+    await _scheduleAt(2, 23, 30, l10n.notificationTitle, l10n.notificationBody2);
   }
 
-  Future<void> scheduleNotification1(BuildContext context) async {
+  /// Helper interno: schedula una notifica per [hour]:[minute] senza bisogno di BuildContext.
+  Future<void> _scheduleAt(int id, int hour, int minute, String title, String body) async {
     try {
       final now = tz.TZDateTime.now(tz.local);
-      var scheduledDate = tz.TZDateTime(
-        tz.local,
-        now.year,
-        now.month,
-        now.day,
-        21,
-        00,
-      );
-
+      var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
       if (scheduledDate.isBefore(now)) {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
       }
 
-      final l10n = AppLocalizations.of(context)!;
-
       await notificationsPlugin.zonedSchedule(
-        1,
-        l10n.notificationTitle,
-        l10n.notificationBody1,
+        id,
+        title,
+        body,
         scheduledDate,
         notificationDetails(),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -141,41 +128,7 @@ class NotiService {
         matchDateTimeComponents: DateTimeComponents.time,
       );
     } catch (e) {
-      debugPrint('Failed to schedule notification: $e');
-    }
-  }
-
-  Future<void> scheduleNotification2(BuildContext context) async {
-    try {
-      final now = tz.TZDateTime.now(tz.local);
-      var scheduledDate = tz.TZDateTime(
-        tz.local,
-        now.year,
-        now.month,
-        now.day,
-        23,
-        30,
-      );
-
-      if (scheduledDate.isBefore(now)) {
-        scheduledDate = scheduledDate.add(const Duration(days: 1));
-      }
-
-      final l10n = AppLocalizations.of(context)!;
-
-      await notificationsPlugin.zonedSchedule(
-        2,
-        l10n.notificationTitle,
-        l10n.notificationBody2,
-        scheduledDate,
-        notificationDetails(),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
-    } catch (e) {
-      debugPrint('Failed to schedule notification: $e');
+      debugPrint('Failed to schedule notification $id: $e');
     }
   }
 

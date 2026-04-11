@@ -130,13 +130,15 @@
   "statsEntries": "記録",
   "statsBestDayLabel": "最も幸せな日",
   "statsNoKeywords": "まだキーワードなし",
+  "statsTopEmojis": "よく使った絵文字",
+  "statsNoEmojis": "まだ絵文字の記録なし",
   "statsUsages": "回",
   "statsMonthAvg": "平均",
   "statsNoMonthData": "この期間のデータなし",
   "impostazioni": "設定",
   "modalitaScura": "ダークモード",
   "modalitaChiara": "ライトモード",
-  "shareBadgeButton": "Share",
+  "shareBadgeButton": "シェア",
   "shareBadgeText": "I just unlocked the {badgeName} badge {emoji} on DailyFox for a {streak} days momentum! 🎉",
   "@shareBadgeText": {
     "placeholders": {
@@ -144,5 +146,21 @@
       "emoji": {},
       "streak": {}
     }
-  }
+  },
+  "shareBadgeTitle": "DailyFoxで新しい実績を解除！",
+  "shareBadgeUnlocked": "「{badgeName}」バッジ {emoji} を解除しました",
+  "@shareBadgeUnlocked": {
+    "placeholders": {
+      "badgeName": {},
+      "emoji": {}
+    }
+  },
+  "shareBadgeStreak": "{streak}{daysLabel}連続の記録達成！",
+  "@shareBadgeStreak": {
+    "placeholders": {
+      "streak": {},
+      "daysLabel": {}
+    }
+  },
+  "shareBadgeCta": "DailyFoxをダウンロードして、あなたの旅を始めよう！📱"
 }

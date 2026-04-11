@@ -130,6 +130,8 @@
   "statsEntries": "entrées",
   "statsBestDayLabel": "Ton jour le plus heureux",
   "statsNoKeywords": "Aucun mot-clé enregistré",
+  "statsTopEmojis": "Emojis les plus utilisés",
+  "statsNoEmojis": "Aucun emoji enregistré",
   "statsUsages": "utilisations",
   "statsMonthAvg": "Moyenne",
   "statsNoMonthData": "Pas de données pour cette période",
@@ -144,5 +146,21 @@
       "emoji": {},
       "streak": {}
     }
-  }
+  },
+  "shareBadgeTitle": "Nouvel exploit sur DailyFox !",
+  "shareBadgeUnlocked": "J'ai débloqué le badge \"{badgeName}\" {emoji}",
+  "@shareBadgeUnlocked": {
+    "placeholders": {
+      "badgeName": {},
+      "emoji": {}
+    }
+  },
+  "shareBadgeStreak": "pour un élan de {streak} {daysLabel} consécutifs !",
+  "@shareBadgeStreak": {
+    "placeholders": {
+      "streak": {},
+      "daysLabel": {}
+    }
+  },
+  "shareBadgeCta": "Téléchargez DailyFox et commencez votre parcours ! 📱"
 }

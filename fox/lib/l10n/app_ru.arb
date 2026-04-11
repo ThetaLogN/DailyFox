@@ -130,13 +130,15 @@
   "statsEntries": "записей",
   "statsBestDayLabel": "Твой самый счастливый день",
   "statsNoKeywords": "Ключевых слов пока нет",
+  "statsTopEmojis": "Популярные эмодзи",
+  "statsNoEmojis": "Эмодзи ещё не записаны",
   "statsUsages": "раз",
   "statsMonthAvg": "Среднее",
   "statsNoMonthData": "Нет данных за этот период",
   "impostazioni": "Настройки",
   "modalitaScura": "Темный режим",
   "modalitaChiara": "Светлый режим",
-  "shareBadgeButton": "Share",
+  "shareBadgeButton": "Поделиться",
   "shareBadgeText": "I just unlocked the {badgeName} badge {emoji} on DailyFox for a {streak} days momentum! 🎉",
   "@shareBadgeText": {
     "placeholders": {
@@ -144,5 +146,21 @@
       "emoji": {},
       "streak": {}
     }
-  }
+  },
+  "shareBadgeTitle": "Новое достижение в DailyFox!",
+  "shareBadgeUnlocked": "Я разблокировал значок \"{badgeName}\" {emoji}",
+  "@shareBadgeUnlocked": {
+    "placeholders": {
+      "badgeName": {},
+      "emoji": {}
+    }
+  },
+  "shareBadgeStreak": "за серию из {streak} {daysLabel} подряд!",
+  "@shareBadgeStreak": {
+    "placeholders": {
+      "streak": {},
+      "daysLabel": {}
+    }
+  },
+  "shareBadgeCta": "Скачай DailyFox и начни свой путь! 📱"
 }

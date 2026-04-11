@@ -227,6 +227,8 @@
   "statsEntries": "voci",
   "statsBestDayLabel": "Il tuo giorno più felice",
   "statsNoKeywords": "Nessuna parola chiave registrata",
+  "statsTopEmojis": "Emoji più usate",
+  "statsNoEmojis": "Nessuna emoji registrata",
   "statsUsages": "usi",
   "statsMonthAvg": "Media",
   "statsNoMonthData": "Nessun dato per questo periodo",
@@ -241,5 +243,21 @@
       "emoji": {},
       "streak": {}
     }
-  }
+  },
+  "shareBadgeTitle": "Nuovo traguardo su DailyFox!",
+  "shareBadgeUnlocked": "Ho sbloccato il badge \"{badgeName}\" {emoji}",
+  "@shareBadgeUnlocked": {
+    "placeholders": {
+      "badgeName": {},
+      "emoji": {}
+    }
+  },
+  "shareBadgeStreak": "per uno slancio di {streak} {daysLabel} consecutivi!",
+  "@shareBadgeStreak": {
+    "placeholders": {
+      "streak": {},
+      "daysLabel": {}
+    }
+  },
+  "shareBadgeCta": "Scarica DailyFox e inizia il tuo percorso! 📱"
 }

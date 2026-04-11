@@ -147,6 +147,32 @@ class BadgeHelper {
     }
   }
 
+  /// Recupera i badge sui dati passati.
+  /// Se l'utente aggiorna l'app e ha già un [currentStreak] alto, sblocca
+  /// retroattivamente i badge che gli spettano ma che non aveva ancora
+  /// (basandosi solo sullo slancio *attuale* e non quello storico).
+  static Future<void> backfillBadges(int currentStreak) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final unlockedList = prefs.getStringList(_prefsKey) ?? [];
+      bool changed = false;
+
+      for (final badge in allBadges) {
+        if (currentStreak >= badge.requiredStreak && !unlockedList.contains(badge.id)) {
+          unlockedList.add(badge.id);
+          changed = true;
+          debugPrint('Retroactively unlocked missing badge: ${badge.id}');
+        }
+      }
+
+      if (changed) {
+        await prefs.setStringList(_prefsKey, unlockedList);
+      }
+    } catch (e) {
+      debugPrint('Error backfilling badges: $e');
+    }
+  }
+
   /// Il badge più vicino a essere sbloccato (dato lo streak corrente).
   static DailyBadge? nextBadge(int currentStreak) {
     final locked = allBadges.where((b) => b.requiredStreak > currentStreak);

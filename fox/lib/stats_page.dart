@@ -4,6 +4,7 @@ import '../helpers/database_helper.dart';
 import '../models/diary_entry.dart';
 import '../widgets/mood_chart.dart';
 import '../widgets/keywords_chart.dart';
+import '../widgets/emoji_chart.dart';
 import '../widgets/weekday_chart.dart';
 import '../widgets/monthly_stats_chart.dart';
 
@@ -85,7 +86,17 @@ class _StatsPageState extends State<StatsPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // 3. Giorno migliore della settimana
+                  // 3. Emoji più usate
+                  _buildSection(
+                    title: l10n.statsTopEmojis,
+                    icon: Icons.emoji_emotions_outlined,
+                    color: const Color(0xFFEC4899),
+                    cs: cs,
+                    child: EmojiChart(entries: _entries),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 4. Giorno migliore della settimana
                   _buildSection(
                     title: l10n.statsBestDay,
                     icon: Icons.calendar_today_outlined,

@@ -509,28 +509,23 @@ struct StarShape: Shape {
     }
 }
 
-struct FoxWidgetEntryView: View {
-    var entry: Provider.Entry
+struct FoxWidgetBackground: View {
+    let rating: Int
     
     var body: some View {
-        ZStack {
-            // Sfondo gradiente
-            RadialGradient(
-                colors: backgroundColors(for: entry.rating),
-                center: .center,
-                startRadius: 20,
-                endRadius: 150
+        RadialGradient(
+            colors: backgroundColors(for: rating),
+            center: .center,
+            startRadius: 20,
+            endRadius: 150
+        )
+        .overlay(
+            LinearGradient(
+                colors: [Color.white.opacity(0.1), Color.clear, Color.white.opacity(0.05)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
             )
-            .overlay(
-                LinearGradient(
-                    colors: [Color.white.opacity(0.1), Color.clear, Color.white.opacity(0.05)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            
-            AnimeFoxView(rating: entry.rating, animationPhase: entry.animationPhase)
-        }
+        )
     }
     
     private func backgroundColors(for rating: Int) -> [Color] {
@@ -569,6 +564,14 @@ struct FoxWidgetEntryView: View {
     }
 }
 
+struct FoxWidgetEntryView: View {
+    var entry: Provider.Entry
+    
+    var body: some View {
+        AnimeFoxView(rating: entry.rating, animationPhase: entry.animationPhase)
+    }
+}
+
 struct FoxWidget: Widget {
     let kind: String = "FoxWidget"
 
@@ -576,13 +579,18 @@ struct FoxWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             if #available(iOS 17.0, *) {
                 FoxWidgetEntryView(entry: entry)
-                    .containerBackground(.clear, for: .widget)
+                    .containerBackground(for: .widget) {
+                        FoxWidgetBackground(rating: entry.rating)
+                    }
             } else {
-                FoxWidgetEntryView(entry: entry)
-                    .background()
+                ZStack {
+                    FoxWidgetBackground(rating: entry.rating)
+                    FoxWidgetEntryView(entry: entry)
+                }
             }
         }
         .configurationDisplayName("DailyFox🦊")
+
 
         .supportedFamilies([.systemSmall, .systemMedium])
     }

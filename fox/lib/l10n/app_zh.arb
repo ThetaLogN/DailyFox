@@ -130,13 +130,15 @@
   "statsEntries": "条",
   "statsBestDayLabel": "你最快乐的一天",
   "statsNoKeywords": "还没有记录关键词",
+  "statsTopEmojis": "最常用的表情",
+  "statsNoEmojis": "还没有记录表情",
   "statsUsages": "次",
   "statsMonthAvg": "平均",
   "statsNoMonthData": "该时段无数据",
   "impostazioni": "设置",
   "modalitaScura": "深色模式",
   "modalitaChiara": "浅色模式",
-  "shareBadgeButton": "Share",
+  "shareBadgeButton": "分享",
   "shareBadgeText": "I just unlocked the {badgeName} badge {emoji} on DailyFox for a {streak} days momentum! 🎉",
   "@shareBadgeText": {
     "placeholders": {
@@ -144,5 +146,21 @@
       "emoji": {},
       "streak": {}
     }
-  }
+  },
+  "shareBadgeTitle": "在DailyFox上获得新成就！",
+  "shareBadgeUnlocked": "我解锁了\"{badgeName}\"徽章 {emoji}",
+  "@shareBadgeUnlocked": {
+    "placeholders": {
+      "badgeName": {},
+      "emoji": {}
+    }
+  },
+  "shareBadgeStreak": "连续{streak}{daysLabel}的坚持！",
+  "@shareBadgeStreak": {
+    "placeholders": {
+      "streak": {},
+      "daysLabel": {}
+    }
+  },
+  "shareBadgeCta": "下载DailyFox，开始你的旅程！📱"
 }

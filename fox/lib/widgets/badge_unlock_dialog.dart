@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:confetti/confetti.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../helpers/badge_helper.dart';
 import '../models/badge.dart';
 
@@ -21,6 +25,9 @@ class _BadgeUnlockDialogState extends State<BadgeUnlockDialog>
   late Animation<double> _opacityAnimation;
   late Animation<double> _emojiAnimation;
   late ConfettiController _confettiController;
+
+  final GlobalKey _shareCardKey = GlobalKey();
+  bool _isSharing = false;
 
   @override
   void initState() {
@@ -65,6 +72,73 @@ class _BadgeUnlockDialogState extends State<BadgeUnlockDialog>
     super.dispose();
   }
 
+  /// Cattura il widget [_ShareBadgeCard] come immagine e condivide.
+  Future<void> _shareBadgeWithImage() async {
+    if (_isSharing) return;
+    setState(() => _isSharing = true);
+
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      final localizedName = BadgeHelper.localizedName(widget.badge.id, l10n);
+      final daysLabel = widget.badge.requiredStreak == 1 ? l10n.day : l10n.days;
+
+      // Cattura il widget come immagine
+      final boundary = _shareCardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) {
+        // Fallback: condividi solo testo
+        _shareTextOnly(l10n, localizedName);
+        return;
+      }
+
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        _shareTextOnly(l10n, localizedName);
+        return;
+      }
+
+      final pngBytes = byteData.buffer.asUint8List();
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/dailyfox_badge_${widget.badge.id}.png');
+      await file.writeAsBytes(pngBytes);
+
+      final shareText = '🏆 ${l10n.shareBadgeTitle}\n\n'
+          '${l10n.shareBadgeUnlocked(localizedName, widget.badge.emoji)}\n'
+          '${l10n.shareBadgeStreak(widget.badge.requiredStreak, daysLabel)}\n\n'
+          '${l10n.shareBadgeCta}';
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: shareText,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error sharing badge image: $e');
+      // l10n e localizedName sono stati estratti sincronamente prima
+      // quindi usiamo il fallback diretto
+      _shareTextFallback();
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
+  }
+
+  void _shareTextOnly(AppLocalizations l10n, String localizedName) {
+    final shareText = l10n.shareBadgeText(
+      localizedName,
+      widget.badge.emoji,
+      widget.badge.requiredStreak,
+    );
+    SharePlus.instance.share(ShareParams(text: shareText));
+  }
+
+  /// Fallback senza context — usa direttamente i dati del badge.
+  void _shareTextFallback() {
+    final text = '🏆 ${widget.badge.emoji} ${widget.badge.name} — '
+        '${widget.badge.requiredStreak} days on DailyFox! 🎉';
+    SharePlus.instance.share(ShareParams(text: text));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -105,111 +179,143 @@ class _BadgeUnlockDialogState extends State<BadgeUnlockDialog>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Header
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.amber,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.lock_open, color: Colors.white, size: 16),
-                                const SizedBox(width: 6),
-                                Text(
-                                  l10n.badgeUnlocked,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-      
-                          const SizedBox(height: 24),
-      
-                          // Emoji animata
-                          Transform.scale(
-                            scale: _emojiAnimation.value,
+                          // Card catturabile per la condivisione
+                          RepaintBoundary(
+                            key: _shareCardKey,
                             child: Container(
-                              width: 100,
-                              height: 100,
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.amber.withValues(alpha: 0.4),
-                                    blurRadius: 20,
-                                    spreadRadius: 4,
+                                borderRadius: BorderRadius.circular(20),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [Colors.amber.shade50, Colors.orange.shade50],
+                                ),
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Header
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.lock_open, color: Colors.white, size: 16),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          l10n.badgeUnlocked,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 24),
+
+                                  // Emoji animata
+                                  Transform.scale(
+                                    scale: _emojiAnimation.value,
+                                    child: Container(
+                                      width: 100,
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.amber.withValues(alpha: 0.4),
+                                            blurRadius: 20,
+                                            spreadRadius: 4,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          widget.badge.emoji,
+                                          style: const TextStyle(fontSize: 52),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  // Nome badge localizzato
+                                  Text(
+                                    localizedName,
+                                    style: const TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.amber,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 8),
+
+                                  // Milestone
+                                  Text(
+                                    '${widget.badge.requiredStreak} $daysLabel',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.orange.shade700,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  // Descrizione localizzata
+                                  Text(
+                                    localizedDesc,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: cs.onSurfaceVariant,
+                                      height: 1.4,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 16),
+
+                                  // Branding DailyFox
+                                  Text(
+                                    '🦊 DailyFox',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.orange.shade400,
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
                                 ],
                               ),
-                              child: Center(
-                                child: Text(
-                                  widget.badge.emoji,
-                                  style: const TextStyle(fontSize: 52),
-                                ),
-                              ),
                             ),
                           ),
-      
-                          const SizedBox(height: 20),
-      
-                          // Nome badge localizzato
-                          Text(
-                            localizedName,
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.amber,
-                            ),
-                          ),
-      
-                          const SizedBox(height: 8),
-      
-                          // Milestone
-                          Text(
-                            '${widget.badge.requiredStreak} $daysLabel',
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Colors.orange.shade700,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-      
-                          const SizedBox(height: 12),
-      
-                          // Descrizione localizzata
-                          Text(
-                            localizedDesc,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: cs.onSurfaceVariant,
-                              height: 1.4,
-                            ),
-                          ),
-      
+
                           const SizedBox(height: 28),
-      
+
                           // Bottoni
                           Row(
                             children: [
                               Expanded(
                                 child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    final shareText = l10n.shareBadgeText(
-                                      localizedName, 
-                                      widget.badge.emoji, 
-                                      widget.badge.requiredStreak
-                                    );
-                                    Share.share(shareText);
-                                  },
-                                  icon: const Icon(Icons.ios_share, size: 18),
+                                  onPressed: _isSharing ? null : _shareBadgeWithImage,
+                                  icon: _isSharing
+                                      ? const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        )
+                                      : const Icon(Icons.ios_share, size: 18),
                                   label: Text(
                                     l10n.shareBadgeButton,
                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),

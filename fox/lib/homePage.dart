@@ -142,9 +142,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    NotiService().scheduleNotification(context);
-    NotiService().scheduleNotification1(context);
-    NotiService().scheduleNotification2(context);
+    // didChangeDependencies è il primo punto in cui AppLocalizations.of(context)
+    // è garantito disponibile. Ri-schedula le notifiche quando la lingua cambia.
+    _scheduleNotificationsIfNeeded();
+  }
+
+  /// Schedula le notifiche in base allo stato attuale dell'entry di oggi.
+  /// Sicuro da chiamare più volte — si basa sullo stato _hasEntryToday corrente.
+  void _scheduleNotificationsIfNeeded() {
+    if (!mounted) return;
+    NotiService().scheduleAllNotifications(
+      context,
+      hasEntryToday: _hasEntryToday,
+    );
   }
 
   @override
@@ -192,6 +202,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     await prefs.setInt('current_streak', currentStreak);
     
     final bestStreak = prefs.getInt('best_streak') ?? 0;
+    
+    // BACKFILL BADGES: Se l'utente ha aggiornato l'app,
+    // garantiamo che abbia i badge che gli spettano in base allo slancio ATTUALE.
+    await BadgeHelper.backfillBadges(currentStreak);
+
     setState(() {
       _currentStreak = currentStreak;
       _bestStreak = bestStreak;
@@ -355,6 +370,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           _isLoading = false;
         });
       }
+
+      // Ri-schedula/cancella le notifiche in base allo stato aggiornato
+      _scheduleNotificationsIfNeeded();
     } catch (e) {
       setState(() => _isLoading = false);
       debugPrint('Error loading today\'s entry: $e');
