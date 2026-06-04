@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:workmanager/workmanager.dart';
 import 'dart:ui' as ui;
-import 'package:DailyFox/noti_service.dart';
-import 'package:DailyFox/widget_bitmap.dart';
-import 'homePage.dart';
+import 'package:daily_fox/noti_service.dart';
+import 'package:daily_fox/widget_bitmap.dart';
+import 'home_page.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:DailyFox/helpers/database_helper.dart';
+import 'package:daily_fox/helpers/database_helper.dart';
 
 // Background entry point for WorkManager
 /*void callbackDispatcher() {

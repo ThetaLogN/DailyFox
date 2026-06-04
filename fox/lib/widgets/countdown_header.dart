@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
-import '../calendarPage.dart';
+import '../calendar_page.dart';
 
 /// Header con countdown animato mostrato quando non è ancora le 18:00.
 /// Cliccando naviga al calendario.
