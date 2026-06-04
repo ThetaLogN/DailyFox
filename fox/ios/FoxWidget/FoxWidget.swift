@@ -579,11 +579,8 @@ struct FoxWidgetEntryView: View {
     var entry: Provider.Entry
     
     var body: some View {
-        ZStack {
-            FoxWidgetBackground(rating: entry.rating)
-            AnimeFoxView(rating: entry.rating, animationPhase: entry.animationPhase)
-        }
-        .widgetURL(URL(string: "dailyfox://open"))
+        AnimeFoxView(rating: entry.rating, animationPhase: entry.animationPhase)
+            .widgetURL(URL(string: "dailyfox://open"))
     }
 }
 
@@ -594,14 +591,15 @@ struct FoxWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             if #available(iOS 17.0, *) {
                 FoxWidgetEntryView(entry: entry)
-                    .containerBackground(.clear, for: .widget)
+                    .containerBackground(for: .widget) {
+                        FoxWidgetBackground(rating: entry.rating)
+                    }
             } else {
                 FoxWidgetEntryView(entry: entry)
+                    .background(FoxWidgetBackground(rating: entry.rating))
             }
         }
         .configurationDisplayName("DailyFox🦊")
-
-
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
