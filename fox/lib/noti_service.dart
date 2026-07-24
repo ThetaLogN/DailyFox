@@ -15,6 +15,9 @@ class NotiService {
   final notificationsPlugin = FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
 
+  // Coda per serializzare schedule/cancel ed evitare race tra chiamate concorrenti
+  Future<void> _pending = Future.value();
+
   bool get isInitialized => _isInitialized;
 
   Future<void> initNotifications() async {
@@ -82,39 +85,67 @@ class NotiService {
     }
   }
 
-  /// Schedula o cancella le notifiche in base a [hasEntryToday].
-  /// Se l'utente ha già valutato la giornata, tutte le notifiche vengono
-  /// cancellate. Altrimenti vengono schedate normalmente.
+  /// Quanti giorni in avanti schedulare i promemoria a ogni chiamata.
+  /// La finestra viene rinnovata a ogni apertura dell'app; 7 giorni coprono
+  /// anche chi non riapre l'app per una settimana (21 notifiche, ben sotto
+  /// il limite iOS di 64 pending).
+  static const int _daysAhead = 7;
+
+  /// Schedula i promemoria per i prossimi [_daysAhead] giorni.
+  /// Se l'utente ha già valutato la giornata ([hasEntryToday]), quelle di
+  /// oggi vengono saltate e si parte da domani, così il promemoria arriva
+  /// anche se l'app non viene riaperta. Le notifiche sono schedulate con
+  /// date esplicite (niente repeat su ora/minuto: su iOS quel trigger
+  /// ignorerebbe il giorno e scatterebbe comunque oggi).
   ///
   /// Le stringhe localizzate vengono estratte sincronamente da [context]
   /// prima di qualsiasi operazione asincrona.
-  Future<void> scheduleAllNotifications(BuildContext context, {required bool hasEntryToday}) async {
-    if (hasEntryToday) {
-      // L'utente ha già valutato → cancella tutte le notifiche per oggi
-      await cancelNotificationsAll();
-      return;
-    }
-
+  Future<void> scheduleAllNotifications(BuildContext context, {required bool hasEntryToday}) {
     // Estraiamo le stringhe localizzate sincronamente prima degli await
     final l10n = AppLocalizations.of(context);
-    if (l10n == null) {
-      debugPrint('NotiService: AppLocalizations not available yet, skipping schedule');
-      return;
-    }
 
-    await _scheduleAt(0, 18, 00, l10n.notificationTitle, l10n.notificationBody);
-    await _scheduleAt(1, 21, 00, l10n.notificationTitle, l10n.notificationBody1);
-    await _scheduleAt(2, 23, 30, l10n.notificationTitle, l10n.notificationBody2);
+    // Serializziamo le chiamate: una schedulazione in corso deve completare
+    // prima che una cancellazione (o ri-schedulazione) successiva esegua,
+    // altrimenti cancelAll può intrecciarsi con gli zonedSchedule precedenti
+    // lasciando notifiche attive anche a giornata già valutata.
+    _pending = _pending.then((_) async {
+      // Partiamo sempre da uno stato pulito, così la chiamata è idempotente
+      await cancelNotificationsAll();
+
+      if (l10n == null) {
+        debugPrint('NotiService: AppLocalizations not available yet, skipping schedule');
+        return;
+      }
+
+      final slots = [
+        (hour: 18, minute: 0, body: l10n.notificationBody),
+        (hour: 21, minute: 0, body: l10n.notificationBody1),
+        (hour: 23, minute: 30, body: l10n.notificationBody2),
+      ];
+
+      // A giornata già valutata si parte da domani
+      final firstDay = hasEntryToday ? 1 : 0;
+      for (var day = firstDay; day < _daysAhead; day++) {
+        for (var slot = 0; slot < slots.length; slot++) {
+          final s = slots[slot];
+          await _scheduleAt(day * slots.length + slot, day, s.hour, s.minute,
+              l10n.notificationTitle, s.body);
+        }
+      }
+    });
+    return _pending;
   }
 
-  /// Helper interno: schedula una notifica per [hour]:[minute] senza bisogno di BuildContext.
-  Future<void> _scheduleAt(int id, int hour, int minute, String title, String body) async {
+  /// Helper interno: schedula una notifica one-shot tra [daysFromNow] giorni
+  /// alle [hour]:[minute]. Se l'orario risulta già passato (solo possibile
+  /// con daysFromNow == 0) la salta.
+  Future<void> _scheduleAt(
+      int id, int daysFromNow, int hour, int minute, String title, String body) async {
     try {
       final now = tz.TZDateTime.now(tz.local);
-      var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-      if (scheduledDate.isBefore(now)) {
-        scheduledDate = scheduledDate.add(const Duration(days: 1));
-      }
+      final scheduledDate = tz.TZDateTime(
+          tz.local, now.year, now.month, now.day + daysFromNow, hour, minute);
+      if (scheduledDate.isBefore(now)) return;
 
       await notificationsPlugin.zonedSchedule(
         id,
@@ -125,7 +156,6 @@ class NotiService {
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
       );
     } catch (e) {
       debugPrint('Failed to schedule notification $id: $e');

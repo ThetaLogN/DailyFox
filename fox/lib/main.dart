@@ -9,33 +9,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:daily_fox/helpers/database_helper.dart';
 
-// Background entry point for WorkManager
-/*void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    WidgetsFlutterBinding.ensureInitialized();
-    const platform = MethodChannel('com.example.dailyfox/widget');
-    final prefs = await SharedPreferences.getInstance();
-    final rating = prefs.getInt('rating') ?? 7;
-    final animationPhase =
-        (DateTime.now().millisecondsSinceEpoch ~/ 5000 % 6).toInt();
-
-    try {
-      final image = await widgetToImage(rating, animationPhase);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      final bytes = byteData!.buffer.asUint8List();
-      await platform.invokeMethod('updateWidget', {
-        'rating': rating,
-        'animationPhase': animationPhase,
-        'bitmap': bytes,
-      });
-    } catch (e) {
-      debugPrint('Error updating widget: $e');
-    }
-
-    return true;
-  });
-}*/
-
+//ok
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
 void main() async {
@@ -50,6 +24,27 @@ void main() async {
   final isDark = prefs.getBool('isDark');
   if (isDark != null) {
     themeNotifier.value = isDark ? ThemeMode.dark : ThemeMode.light;
+  }
+
+  // Pre-initialize widget shared preferences for App Group on first run/upgrade
+  // Usa la versione come chiave per forzare la re-inizializzazione ad ogni aggiornamento
+  const currentVersion = '1.0.5+16';
+  final lastInitVersion = prefs.getString('widget_init_version');
+  if (lastInitVersion != currentVersion) {
+    try {
+      // Se l'utente ha già dati salvati, usa quelli; altrimenti valori di default
+      final existingRating = prefs.getInt('rating') ?? 7;
+      final existingEmoji = prefs.getString('emoji') ?? '🦊';
+      final existingKeyword = prefs.getString('keyword') ?? 'DailyFox';
+      await WidgetService.saveAndUpdateWidget(
+        rating: existingRating,
+        emoji: existingEmoji,
+        keyword: existingKeyword,
+      );
+      await prefs.setString('widget_init_version', currentVersion);
+    } catch (e) {
+      debugPrint('Error pre-initializing widget data: $e');
+    }
   }
 
   // Initialize platform channel for widget

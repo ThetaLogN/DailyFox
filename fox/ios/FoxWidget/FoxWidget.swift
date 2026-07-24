@@ -14,28 +14,16 @@ struct Provider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        var userDefaults = UserDefaults(suiteName: "group.com.giorgiomartucci.DailyFox")
-        var ratingString = userDefaults?.string(forKey: "rating")
-        
-        if ratingString == nil {
-            userDefaults = UserDefaults(suiteName: "group.foxApp")
-            ratingString = userDefaults?.string(forKey: "rating")
-        }
-        
+        let userDefaults = UserDefaults(suiteName: "group.com.giorgiomartucci.DailyFox")
+        let ratingString = userDefaults?.string(forKey: "rating")
         let rating = Int(ratingString ?? "7") ?? 7
         let entry = SimpleEntry(date: Date(), rating: rating, animationPhase: 0)
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        var userDefaults = UserDefaults(suiteName: "group.com.giorgiomartucci.DailyFox")
-        var ratingString = userDefaults?.string(forKey: "rating")
-        
-        if ratingString == nil {
-            userDefaults = UserDefaults(suiteName: "group.foxApp")
-            ratingString = userDefaults?.string(forKey: "rating")
-        }
-        
+        let userDefaults = UserDefaults(suiteName: "group.com.giorgiomartucci.DailyFox")
+        let ratingString = userDefaults?.string(forKey: "rating")
         let rating = Int(ratingString ?? "7") ?? 7
         
         var entries: [SimpleEntry] = []
@@ -119,12 +107,14 @@ struct AnimeFoxView: View {
                 // Particelle naturali per rating alto (meno kawaii)
                 if rating >= 8 {
                     ForEach(0..<4, id: \.self) { index in
+                        let xOffset: CGFloat = index % 2 == 0 ? -30.0 * CGFloat(index + 1) : 25.0 * CGFloat(index)
+                        let yOffset: CGFloat = index < 2 ? -25.0 : 30.0
                         Circle()
                             .fill(Color.yellow.opacity(0.3))
                             .frame(width: 3, height: 3)
                             .offset(
-                                x: CGFloat.random(in: -40...40),
-                                y: CGFloat.random(in: -40...40)
+                                x: xOffset,
+                                y: yOffset
                             )
                             .opacity(animationPhase % 2 == index % 2 ? 0.6 : 0.2)
                     }
@@ -579,8 +569,11 @@ struct FoxWidgetEntryView: View {
     var entry: Provider.Entry
     
     var body: some View {
-        AnimeFoxView(rating: entry.rating, animationPhase: entry.animationPhase)
-            .widgetURL(URL(string: "dailyfox://open"))
+        ZStack {
+            FoxWidgetBackground(rating: entry.rating)
+            AnimeFoxView(rating: entry.rating, animationPhase: entry.animationPhase)
+        }
+        .widgetURL(URL(string: "dailyfox://open"))
     }
 }
 
@@ -602,13 +595,4 @@ struct FoxWidget: Widget {
         .configurationDisplayName("DailyFox🦊")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
-}
-
-#Preview(as: .systemSmall) {
-    FoxWidget()
-} timeline: {
-    SimpleEntry(date: .now, rating: 8, animationPhase: 0)
-    SimpleEntry(date: .now, rating: 8, animationPhase: 1)
-    SimpleEntry(date: .now, rating: 8, animationPhase: 2)
-    SimpleEntry(date: .now, rating: 8, animationPhase: 3)
 }

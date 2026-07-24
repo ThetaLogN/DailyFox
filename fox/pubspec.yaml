@@ -1,7 +1,7 @@
 name: daily_fox
 description: "A new Flutter project."
 publish_to: 'none' 
-version: 1.0.5+15
+version: 1.0.5+16
 
 environment:
   sdk: ^3.6.1
@@ -21,7 +21,6 @@ dependencies:
   shared_preferences: ^2.2.2 
   cupertino_icons: ^1.0.8
   flutter_timezone: ^4.1.1
-  workmanager: ^0.6.0
   in_app_purchase: ^3.1.11
   
   flutter_localizations:

@@ -31,6 +31,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String _keyword = '';
   bool _showEmojiPicker = false;
   bool _hasEntryToday = false;
+  bool _entryLoaded = false;
   bool _isLoading = true;
   DiaryEntry? _todayEntry;
   final TextEditingController _keywordController = TextEditingController();
@@ -53,7 +54,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _migrateAppGroup();
 
     _saveAnimationController = AnimationController(
       duration: const Duration(milliseconds: 200),
@@ -103,42 +103,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _startCountdownTimer();
   }
 
-  Future<void> _migrateAppGroup() async {
-    final prefs = await SharedPreferences.getInstance();
-    final migrated = prefs.getBool('appGroupMigrated') ?? false;
-    
-    if (!migrated) {
-      // Leggi i dati dal vecchio gruppo
-      await HomeWidget.setAppGroupId('group.foxApp');
-      final oldRatingRaw = await HomeWidget.getWidgetData<dynamic>('rating');
-      final oldRating = oldRatingRaw != null ? int.tryParse(oldRatingRaw.toString()) : null;
-      final oldEmoji = await HomeWidget.getWidgetData<String>('emoji');
-      final oldKeyword = await HomeWidget.getWidgetData<String>('keyword');
-
-      // Scrivi nel nuovo gruppo
-      await HomeWidget.setAppGroupId('group.com.giorgiomartucci.DailyFox');
-      if (oldRating != null) {
-        await HomeWidget.saveWidgetData<String>('rating', oldRating.toString());
-      }
-      if (oldEmoji != null) {
-        await HomeWidget.saveWidgetData<String>('emoji', oldEmoji);
-      }
-      if (oldKeyword != null) {
-        await HomeWidget.saveWidgetData<String>('keyword', oldKeyword);
-      }
-
-      // Aggiorna il widget con i nuovi dati
-      await HomeWidget.updateWidget(
-        name: 'FoxWidget',
-        iOSName: 'FoxWidget',
-      );
-
-      // Segna la migrazione come completata
-      await prefs.setBool('appGroupMigrated', true);
-      debugPrint('App Group migrated successfully');
-    }
-  }
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -151,6 +115,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   /// Sicuro da chiamare più volte — si basa sullo stato _hasEntryToday corrente.
   void _scheduleNotificationsIfNeeded() {
     if (!mounted) return;
+    // Finché non sappiamo se oggi è già stato valutato, non schedulare:
+    // _hasEntryToday è ancora al default false e scheduleremmo a vuoto.
+    if (!_entryLoaded) return;
     NotiService().scheduleAllNotifications(
       context,
       hasEntryToday: _hasEntryToday,
@@ -372,6 +339,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       }
 
       // Ri-schedula/cancella le notifiche in base allo stato aggiornato
+      _entryLoaded = true;
       _scheduleNotificationsIfNeeded();
     } catch (e) {
       setState(() => _isLoading = false);
