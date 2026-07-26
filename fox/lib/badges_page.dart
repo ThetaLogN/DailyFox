@@ -89,9 +89,7 @@ class _BadgesPageState extends State<BadgesPage> {
   }
 
   Widget _buildHeader(ColorScheme cs, DailyBadge? nextBadge, AppLocalizations l10n) {
-    final progress = nextBadge != null
-        ? (widget.currentStreak / nextBadge.requiredStreak).clamp(0.0, 1.0)
-        : 1.0;
+    final progress = BadgeHelper.progressToNextBadge(widget.currentStreak);
 
     return Container(
       margin: const EdgeInsets.all(16),

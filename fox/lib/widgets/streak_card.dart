@@ -6,6 +6,11 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 class StreakCard extends StatelessWidget {
   final int currentStreak;
   final int bestStreak;
+
+  /// Lo slancio sopravvive solo grazie al giorno congelato: valutare oggi è
+  /// l'ultima occasione per non perderlo.
+  final bool isFrozen;
+
   final Animation<double> scaleAnimation;
   final Animation<double> opacityAnimation;
   final Animation<double> fireAnimation;
@@ -17,16 +22,29 @@ class StreakCard extends StatelessWidget {
     required this.scaleAnimation,
     required this.opacityAnimation,
     required this.fireAnimation,
+    this.isFrozen = false,
   });
 
   String _getStreakMessage(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    if (isFrozen) return l10n.streakFrozenMessage;
     if (currentStreak == 0) return l10n.startS;
     if (currentStreak == 1) return l10n.first;
     if (currentStreak < 7) return l10n.continua;
     if (currentStreak < 30) return l10n.incredibile;
     return l10n.legend;
   }
+
+  /// Blu/ciano quando lo slancio è congelato, arancio/rosso quando è vivo.
+  List<Color> get _gradientColors => isFrozen
+      ? [
+          Colors.blue.withValues(alpha: 0.8),
+          Colors.cyan.withValues(alpha: 0.6),
+        ]
+      : [
+          Colors.orange.withValues(alpha: 0.8),
+          Colors.red.withValues(alpha: 0.6),
+        ];
 
   @override
   Widget build(BuildContext context) {
@@ -58,10 +76,7 @@ class StreakCard extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          Colors.orange.withValues(alpha: 0.8),
-                          Colors.red.withValues(alpha: 0.6),
-                        ],
+                        colors: _gradientColors,
                       ),
                     ),
                     padding: const EdgeInsets.all(20),
@@ -102,6 +117,11 @@ class StreakCard extends StatelessWidget {
                                         fontSize: 16,
                                       ),
                                     ),
+                                    if (isFrozen) ...[
+                                      const SizedBox(width: 8),
+                                      const Text('❄️',
+                                          style: TextStyle(fontSize: 20)),
+                                    ],
                                   ],
                                 ),
                               ],

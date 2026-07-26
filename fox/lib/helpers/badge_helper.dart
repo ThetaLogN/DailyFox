@@ -60,6 +60,27 @@ class BadgeHelper {
           requiredStreak: 100,
         ),
         DailyBadge(
+          id: 'unstoppable',
+          emoji: '🌊',
+          name: 'Unstoppable',
+          description: '150 momentum days. Nothing can stop you!',
+          requiredStreak: 150,
+        ),
+        DailyBadge(
+          id: 'skyrocket',
+          emoji: '🚀',
+          name: 'Skyrocket',
+          description: '200 momentum days. You\'re headed for the stars!',
+          requiredStreak: 200,
+        ),
+        DailyBadge(
+          id: 'mythic',
+          emoji: '🔮',
+          name: 'Mythic',
+          description: '250 momentum days. Your streak is now the stuff of myth.',
+          requiredStreak: 250,
+        ),
+        DailyBadge(
           id: 'legend',
           emoji: '👑',
           name: 'Legend',
@@ -78,6 +99,9 @@ class BadgeHelper {
       case 'champion':    return l10n.badgeNameChampion;
       case 'diamond':     return l10n.badgeNameDiamond;
       case 'fox_elite':   return l10n.badgeNameFoxElite;
+      case 'unstoppable': return l10n.badgeNameUnstoppable;
+      case 'skyrocket':   return l10n.badgeNameSkyrocket;
+      case 'mythic':      return l10n.badgeNameMythic;
       case 'legend':      return l10n.badgeNameLegend;
       default:            return id;
     }
@@ -93,6 +117,9 @@ class BadgeHelper {
       case 'champion':    return l10n.badgeDescChampion;
       case 'diamond':     return l10n.badgeDescDiamond;
       case 'fox_elite':   return l10n.badgeDescFoxElite;
+      case 'unstoppable': return l10n.badgeDescUnstoppable;
+      case 'skyrocket':   return l10n.badgeDescSkyrocket;
+      case 'mythic':      return l10n.badgeDescMythic;
       case 'legend':      return l10n.badgeDescLegend;
       default:            return '';
     }
@@ -178,6 +205,23 @@ class BadgeHelper {
     final locked = allBadges.where((b) => b.requiredStreak > currentStreak);
     if (locked.isEmpty) return null;
     return locked.reduce((a, b) => a.requiredStreak < b.requiredStreak ? a : b);
+  }
+
+  /// Progresso (0..1) verso il prossimo badge, misurato dalla soglia del badge
+  /// già raggiunto invece che da zero: così la barra avanza ogni giorno anche
+  /// negli intervalli lunghi (es. 250 → 365).
+  static double progressToNextBadge(int currentStreak) {
+    final next = nextBadge(currentStreak);
+    if (next == null) return 1.0;
+
+    final reached = allBadges
+        .where((b) => b.requiredStreak <= currentStreak)
+        .fold<int>(0, (m, b) => b.requiredStreak > m ? b.requiredStreak : m);
+
+    final span = next.requiredStreak - reached;
+    if (span <= 0) return 1.0;
+
+    return ((currentStreak - reached) / span).clamp(0.0, 1.0);
   }
 
   /// Reset completo (utile per debug/test).

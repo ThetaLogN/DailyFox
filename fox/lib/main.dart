@@ -8,8 +8,9 @@ import 'home_page.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:daily_fox/helpers/database_helper.dart';
+import 'package:daily_fox/helpers/purchase_helper.dart';
 
-//ok
+//>^-^<
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
 void main() async {
@@ -18,6 +19,10 @@ void main() async {
   // Initialize notifications
   await NotiService().initNotifications();
   await DatabaseHelper().cleanDuplicatedEntries();
+
+  // Ascolta gli acquisti per tutta la vita dell'app: le transazioni consegnate
+  // in ritardo vanno completate, altrimenti lo store le ripropone a ogni avvio.
+  await PurchaseHelper.instance.init();
 
   // Load theme preference
   final prefs = await SharedPreferences.getInstance();

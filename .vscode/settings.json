@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "/Users/giorgiomartucci/AndroidStudioProjects/Fox/fox/linux"
+    "cmake.sourceDirectory": "/Users/giorgiomartucci/AndroidStudioProjects/Fox/fox/linux",
+    "cmake.ignoreCMakeListsMissing": true
 }

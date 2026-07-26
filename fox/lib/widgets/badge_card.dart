@@ -24,6 +24,9 @@ class BadgeCard extends StatelessWidget {
       case 'champion':    return Colors.amber.shade100;
       case 'diamond':     return Colors.cyan.shade100;
       case 'fox_elite':   return Colors.deepOrange.shade100;
+      case 'unstoppable': return Colors.teal.shade100;
+      case 'skyrocket':   return Colors.blue.shade100;
+      case 'mythic':      return Colors.deepPurple.shade100;
       case 'legend':      return Colors.purple.shade100;
       default:            return Colors.blue.shade100;
     }
@@ -40,6 +43,9 @@ class BadgeCard extends StatelessWidget {
       case 'champion':    return Colors.orange.shade800;
       case 'diamond':     return Colors.cyan.shade700;
       case 'fox_elite':   return Colors.deepOrange.shade700;
+      case 'unstoppable': return Colors.teal.shade700;
+      case 'skyrocket':   return Colors.blue.shade700;
+      case 'mythic':      return Colors.deepPurple;
       case 'legend':      return Colors.purple;
       default:            return Colors.blue;
     }

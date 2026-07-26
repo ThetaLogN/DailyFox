@@ -10,12 +10,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/diary_entry.dart';
 import '../helpers/database_helper.dart';
 import '../helpers/badge_helper.dart';
+import '../helpers/streak_helper.dart';
+import '../helpers/purchase_helper.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
 import 'widgets/streak_card.dart';
 import 'widgets/stats_cards.dart';
 import 'widgets/countdown_header.dart';
 import 'widgets/badge_unlock_dialog.dart';
+import 'widgets/coffee_dialog.dart';
 import 'badges_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -42,6 +45,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   // Streak
   int _currentStreak = 0;
   int _bestStreak = 0;
+  bool _isStreakFrozen = false;
   late AnimationController _streakAnimationController;
   late AnimationController _fireAnimationController;
   late Animation<double> _streakScaleAnimation;
@@ -163,13 +167,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _loadStreakData() async {
     final prefs = await SharedPreferences.getInstance();
-    final currentStreak = await _calculateStreak();
-    
-    // Aggiorna le prefs se lo streak è sceso (es. ha saltato un giorno)
+    final status = await StreakHelper.calculate();
+    final currentStreak = status.days;
+
+    // Aggiorna le prefs se lo streak è sceso (es. ha saltato due giorni)
     await prefs.setInt('current_streak', currentStreak);
-    
+
     final bestStreak = prefs.getInt('best_streak') ?? 0;
-    
+
     // BACKFILL BADGES: Se l'utente ha aggiornato l'app,
     // garantiamo che abbia i badge che gli spettano in base allo slancio ATTUALE.
     await BadgeHelper.backfillBadges(currentStreak);
@@ -177,58 +182,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     setState(() {
       _currentStreak = currentStreak;
       _bestStreak = bestStreak;
+      _isStreakFrozen = status.isFrozen;
     });
     if (_currentStreak > 0) {
       _streakAnimationController.forward();
     }
   }
 
-  /// Calcola lo streak consecutivo.
-  /// Le entry vengono deduplicate per data prima del conteggio,
-  /// in modo che più entry nello stesso giorno non spezzino lo streak.
-  Future<int> _calculateStreak() async {
-    final entries = await DatabaseHelper().getAllEntriesWithSlancioTrue();
-    if (entries.isEmpty) return 0;
-
-    // Raccoglie i giorni unici (senza orario)
-    final Set<String> uniqueDays = {};
-    for (final e in entries) {
-      final d = DateTime.parse(e.date);
-      uniqueDays.add(
-          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}');
-    }
-
-    // Ordina decrescente
-    final sortedDays = uniqueDays.toList()..sort((a, b) => b.compareTo(a));
-
-    final today = DateTime.now();
-    DateTime checkDate = DateTime(today.year, today.month, today.day);
-
-    // Se oggi non ha ancora un'entry, inizia dallo ieri
-    final todayKey =
-        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-    if (!uniqueDays.contains(todayKey)) {
-      checkDate = checkDate.subtract(const Duration(days: 1));
-    }
-
-    int streak = 0;
-    for (final dayStr in sortedDays) {
-      final dayDate = DateTime.parse(dayStr);
-      final checkKey =
-          '${checkDate.year}-${checkDate.month.toString().padLeft(2, '0')}-${checkDate.day.toString().padLeft(2, '0')}';
-      if (dayStr == checkKey) {
-        streak++;
-        checkDate = checkDate.subtract(const Duration(days: 1));
-      } else if (dayDate.isBefore(checkDate)) {
-        break;
-      }
-    }
-
-    return streak;
-  }
-
   Future<void> _updateStreak() async {
-    final newStreak = await _calculateStreak();
+    final status = await StreakHelper.calculate();
+    final newStreak = status.days;
     final prefs = await SharedPreferences.getInstance();
 
     final wasNewStreak = newStreak > _currentStreak;
@@ -236,6 +199,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     setState(() {
       _currentStreak = newStreak;
+      _isStreakFrozen = status.isFrozen;
       if (isNewBest) _bestStreak = newStreak;
     });
 
@@ -521,6 +485,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   );
                 },
               ),
+              const SizedBox(height: 16),
+              ValueListenableBuilder<int>(
+                valueListenable: PurchaseHelper.instance.coffeeCount,
+                builder: (_, int coffeeCount, __) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Theme.of(context).dividerColor),
+                    ),
+                    child: ListTile(
+                      leading: const Icon(Icons.coffee, color: Colors.brown),
+                      title: Text(l10n.coffeeTitle),
+                      subtitle: coffeeCount > 0
+                          ? Text(l10n.coffeeSupporterSubtitle)
+                          : null,
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => showCoffeeDialog(context),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         );
@@ -619,6 +605,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             StreakCard(
               currentStreak: _currentStreak,
               bestStreak: _bestStreak,
+              isFrozen: _isStreakFrozen,
               scaleAnimation: _streakScaleAnimation,
               opacityAnimation: _streakOpacityAnimation,
               fireAnimation: _fireAnimation,
@@ -812,6 +799,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             StreakCard(
               currentStreak: _currentStreak,
               bestStreak: _bestStreak,
+              isFrozen: _isStreakFrozen,
               scaleAnimation: _streakScaleAnimation,
               opacityAnimation: _streakOpacityAnimation,
               fireAnimation: _fireAnimation,

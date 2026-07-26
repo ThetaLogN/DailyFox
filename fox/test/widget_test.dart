@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:daily_fox/models/diary_entry.dart';
 import 'package:daily_fox/models/badge.dart';
+import 'package:daily_fox/helpers/badge_helper.dart';
+import 'package:daily_fox/helpers/streak_helper.dart';
 
 void main() {
   group('DiaryEntry Model Tests', () {
@@ -103,6 +105,170 @@ void main() {
       expect(updated.unlockCount, 2);
       expect(updated.isUnlocked, true);
       expect(updated.id, badge.id);
+    });
+  });
+
+  group('Badge Milestone Ladder Tests', () {
+    test('thresholds are the expected ascending ladder', () {
+      final thresholds =
+          BadgeHelper.allBadges.map((b) => b.requiredStreak).toList();
+
+      expect(thresholds, [1, 3, 7, 14, 30, 60, 100, 150, 200, 250, 365]);
+    });
+
+    test('thresholds are strictly ascending', () {
+      final thresholds =
+          BadgeHelper.allBadges.map((b) => b.requiredStreak).toList();
+
+      for (var i = 1; i < thresholds.length; i++) {
+        expect(thresholds[i], greaterThan(thresholds[i - 1]));
+      }
+    });
+
+    // La guardia che conta davvero: nessun utente deve restare mesi senza una
+    // ricompensa, com'era col vecchio salto 100 → 365 (265 giorni).
+    test('no milestone is more than 115 days after the previous one', () {
+      final thresholds =
+          BadgeHelper.allBadges.map((b) => b.requiredStreak).toList();
+
+      for (var i = 1; i < thresholds.length; i++) {
+        expect(thresholds[i] - thresholds[i - 1], lessThanOrEqualTo(115),
+            reason: 'too long without a reward after ${thresholds[i - 1]} days');
+      }
+    });
+
+    test('every badge has a unique id and emoji', () {
+      final ids = BadgeHelper.allBadges.map((b) => b.id).toList();
+      final emojis = BadgeHelper.allBadges.map((b) => b.emoji).toList();
+
+      expect(ids.toSet().length, ids.length);
+      expect(emojis.toSet().length, emojis.length);
+    });
+
+    test('nextBadge returns the closest locked milestone', () {
+      expect(BadgeHelper.nextBadge(0)?.requiredStreak, 1);
+      expect(BadgeHelper.nextBadge(100)?.requiredStreak, 150);
+      expect(BadgeHelper.nextBadge(200)?.requiredStreak, 250);
+      expect(BadgeHelper.nextBadge(365), isNull);
+    });
+  });
+
+  group('progressToNextBadge Tests', () {
+    test('measures progress from the last milestone reached', () {
+      // 120 giorni: 20 su 50 nell'intervallo 100 → 150.
+      expect(BadgeHelper.progressToNextBadge(120), closeTo(0.4, 0.001));
+      // 260 giorni: 10 su 115 nell'intervallo 250 → 365.
+      expect(BadgeHelper.progressToNextBadge(260), closeTo(10 / 115, 0.001));
+    });
+
+    test('resets to zero right after unlocking a badge', () {
+      expect(BadgeHelper.progressToNextBadge(100), 0.0);
+      expect(BadgeHelper.progressToNextBadge(250), 0.0);
+    });
+
+    test('behaves like absolute progress below the first milestone', () {
+      expect(BadgeHelper.progressToNextBadge(0), 0.0);
+    });
+
+    test('is full once every badge is unlocked', () {
+      expect(BadgeHelper.progressToNextBadge(365), 1.0);
+      expect(BadgeHelper.progressToNextBadge(500), 1.0);
+    });
+  });
+
+  group('Streak Freeze Tests', () {
+    final today = DateTime(2026, 7, 26);
+
+    /// Costruisce l'insieme dei giorni valutati a partire dagli offset
+    /// (0 = oggi, 1 = ieri, ...) rispetto a [today].
+    Set<String> rated(List<int> offsets) => offsets
+        .map((o) => StreakHelper.dayKey(DateTime(2026, 7, 26 - o)))
+        .toSet();
+
+    test('counts an unbroken chain as before', () {
+      final status = StreakHelper.fromRatedDays(rated([0, 1, 2, 3]), today);
+
+      expect(status.days, 4);
+      expect(status.isFrozen, false);
+    });
+
+    test('is not frozen when only today is still unrated', () {
+      final status = StreakHelper.fromRatedDays(rated([1, 2, 3]), today);
+
+      expect(status.days, 3);
+      expect(status.isFrozen, false);
+    });
+
+    test('freezes the streak when yesterday was skipped', () {
+      // Ieri (offset 1) manca: la catena sopravvive ma oggi è l'ultima chance.
+      final status = StreakHelper.fromRatedDays(rated([2, 3, 4]), today);
+
+      expect(status.days, 3);
+      expect(status.isFrozen, true);
+    });
+
+    test('unfreezes and grows once today is rated', () {
+      final status = StreakHelper.fromRatedDays(rated([0, 2, 3, 4]), today);
+
+      expect(status.days, 4);
+      expect(status.isFrozen, false);
+    });
+
+    test('loses the streak after two consecutive skipped days', () {
+      // Ieri e l'altro ieri mancano entrambi.
+      final status = StreakHelper.fromRatedDays(rated([3, 4, 5]), today);
+
+      expect(status.days, 0);
+      expect(status.isFrozen, false);
+    });
+
+    test('bridges a single gap inside the chain', () {
+      // Il giorno 3 manca ma non spezza: 5 giorni valutati, il buco non conta.
+      final status =
+          StreakHelper.fromRatedDays(rated([0, 1, 2, 4, 5, 6]), today);
+
+      expect(status.days, 6);
+      expect(status.isFrozen, false);
+    });
+
+    test('stops at two consecutive gaps inside the chain', () {
+      // I giorni 3 e 4 mancano entrambi: si conta solo fino al giorno 2.
+      final status = StreakHelper.fromRatedDays(rated([0, 1, 2, 5, 6]), today);
+
+      expect(status.days, 3);
+      expect(status.isFrozen, false);
+    });
+
+    test('a frozen chain can still be bridged further back', () {
+      // Ieri saltato (congelato) e un altro buco al giorno 4.
+      final status = StreakHelper.fromRatedDays(rated([2, 3, 5, 6]), today);
+
+      expect(status.days, 4);
+      expect(status.isFrozen, true);
+    });
+
+    test('duplicate entries on the same day do not inflate the streak', () {
+      final days = rated([0, 1, 2]);
+
+      expect(StreakHelper.fromRatedDays(days, today).days, 3);
+    });
+
+    test('no rated days at all means no streak', () {
+      final status = StreakHelper.fromRatedDays(<String>{}, today);
+
+      expect(status.days, 0);
+      expect(status.isFrozen, false);
+    });
+
+    test('crosses a month boundary correctly', () {
+      final firstOfMonth = DateTime(2026, 8, 1);
+      final days = {
+        StreakHelper.dayKey(DateTime(2026, 8, 1)),
+        StreakHelper.dayKey(DateTime(2026, 7, 31)),
+        StreakHelper.dayKey(DateTime(2026, 7, 30)),
+      };
+
+      expect(StreakHelper.fromRatedDays(days, firstOfMonth).days, 3);
     });
   });
 }
