@@ -44,8 +44,9 @@ class _StatCard extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
+                  // Segue il tema: il grigio fisso spariva sul fondo notturno.
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,

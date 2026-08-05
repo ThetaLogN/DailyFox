@@ -265,7 +265,9 @@ class _BadgesPageState extends State<BadgesPage> {
           ] else ...[
             const SizedBox(height: 12),
             Card(
-              color: Colors.amber.shade50,
+              // Tinta ambrata che regge anche sul fondo notturno: shade50
+              // fisso era una macchia bianca in tema scuro.
+              color: Colors.amber.withValues(alpha: 0.14),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16)),
               child: Padding(

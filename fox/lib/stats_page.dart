@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../helpers/database_helper.dart';
+import '../helpers/home_sections.dart';
 import '../models/diary_entry.dart';
-import '../widgets/mood_chart.dart';
-import '../widgets/keywords_chart.dart';
-import '../widgets/emoji_chart.dart';
-import '../widgets/weekday_chart.dart';
-import '../widgets/monthly_stats_chart.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -19,6 +15,9 @@ class _StatsPageState extends State<StatsPage> {
   List<DiaryEntry> _entries = [];
   bool _isLoading = true;
 
+  /// Sezioni replicate nella schermata principale.
+  Set<HomeSection> _inHome = {};
+
   @override
   void initState() {
     super.initState();
@@ -28,9 +27,18 @@ class _StatsPageState extends State<StatsPage> {
   Future<void> _loadEntries() async {
     final entries = await DatabaseHelper().getAllEntries();
     entries.sort((a, b) => a.date.compareTo(b.date));
+    final inHome = await HomeSection.load();
     setState(() {
       _entries = entries;
+      _inHome = inHome;
       _isLoading = false;
+    });
+  }
+
+  Future<void> _setInHome(HomeSection section, bool value) async {
+    await HomeSection.setEnabled(section, value);
+    setState(() {
+      value ? _inHome.add(section) : _inHome.remove(section);
     });
   }
 
@@ -66,54 +74,12 @@ class _StatsPageState extends State<StatsPage> {
                   _buildSummaryRow(l10n, cs),
                   const SizedBox(height: 20),
 
-                  // 1. Grafico andamento umore
-                  _buildSection(
-                    title: l10n.statsMoodTrend,
-                    icon: Icons.show_chart,
-                    color: cs.primary,
-                    cs: cs,
-                    child: MoodChart(entries: _entries),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 2. Parole chiave più usate
-                  _buildSection(
-                    title: l10n.statsTopKeywords,
-                    icon: Icons.label_outline,
-                    color: const Color(0xFF6366F1),
-                    cs: cs,
-                    child: KeywordsChart(entries: _entries),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 3. Emoji più usate
-                  _buildSection(
-                    title: l10n.statsTopEmojis,
-                    icon: Icons.emoji_emotions_outlined,
-                    color: const Color(0xFFEC4899),
-                    cs: cs,
-                    child: EmojiChart(entries: _entries),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 4. Giorno migliore della settimana
-                  _buildSection(
-                    title: l10n.statsBestDay,
-                    icon: Icons.calendar_today_outlined,
-                    color: const Color(0xFF10B981),
-                    cs: cs,
-                    child: WeekdayChart(entries: _entries),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 4. Confronto mensile
-                  _buildSection(
-                    title: l10n.statsMonthlyComparison,
-                    icon: Icons.bar_chart,
-                    color: const Color(0xFFF59E0B),
-                    cs: cs,
-                    child: MonthlyStatsChart(entries: _entries),
-                  ),
+                  // Una sezione per ogni voce del registro, nello stesso
+                  // ordine in cui compaiono in home.
+                  for (final section in HomeSection.values) ...[
+                    _buildSection(section: section, cs: cs),
+                    const SizedBox(height: 16),
+                  ],
 
                   const SizedBox(height: 32),
                 ],
@@ -185,12 +151,15 @@ class _StatsPageState extends State<StatsPage> {
   }
 
   Widget _buildSection({
-    required String title,
-    required IconData icon,
-    required Color color,
+    required HomeSection section,
     required ColorScheme cs,
-    required Widget child,
   }) {
+    final l10n = AppLocalizations.of(context)!;
+    final title = section.title(l10n);
+    final icon = section.icon;
+    final color = section.accent;
+    final child = section.build(_entries);
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -224,9 +193,31 @@ class _StatsPageState extends State<StatsPage> {
             ),
             const SizedBox(height: 20),
             child,
+            const SizedBox(height: 4),
+            _buildHomeToggle(section, cs, l10n),
           ],
         ),
       ),
+    );
+  }
+
+  /// Replica la sezione nella schermata principale dell'app.
+  Widget _buildHomeToggle(
+      HomeSection section, ColorScheme cs, AppLocalizations l10n) {
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      title: Text(
+        l10n.sectionHomeToggle,
+        style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+      ),
+      value: _inHome.contains(section),
+      // Un solo colore per tutti gli interruttori: è un comando, non
+      // un'informazione. L'accento della sezione identifica il grafico e
+      // resta all'intestazione; usarlo anche qui farebbe sembrare i sei
+      // interruttori sei cose diverse.
+      activeColor: cs.primary,
+      onChanged: (value) => _setInHome(section, value),
     );
   }
 }

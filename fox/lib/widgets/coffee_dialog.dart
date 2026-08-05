@@ -108,11 +108,52 @@ class _CoffeeDialogState extends State<CoffeeDialog> {
         Text(
           l10n.coffeeDialogBody,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.4,
+            color: cs.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 24),
         _buildAction(context, l10n, status),
       ],
+    );
+  }
+
+  /// Riquadro di avviso usato dagli stati "non disponibile" ed "errore".
+  /// Un messaggio dentro un contenitore tenue si legge meglio del solo testo
+  /// rosso in mezzo al dialog, e non allarma più del necessario.
+  Widget _buildNotice(
+    BuildContext context, {
+    required IconData icon,
+    required String message,
+    required Color background,
+    required Color foreground,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: background.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: foreground),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.35,
+                color: foreground,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -129,25 +170,47 @@ class _CoffeeDialogState extends State<CoffeeDialog> {
         );
 
       case CoffeeStatus.unavailable:
-        return Text(
-          l10n.coffeeUnavailable,
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+        return _buildNotice(
+          context,
+          icon: Icons.info_outline,
+          message: l10n.coffeeUnavailable,
+          background: cs.surfaceContainerHighest,
+          foreground: cs.onSurfaceVariant,
         );
 
       case CoffeeStatus.error:
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              l10n.coffeeError,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: cs.error),
+            _buildNotice(
+              context,
+              icon: Icons.error_outline,
+              message: l10n.coffeeError,
+              background: cs.errorContainer,
+              foreground: cs.onErrorContainer,
             ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: _purchases.reset,
-              child: Text(l10n.coffeeRetry),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _purchases.reset,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: Text(l10n.coffeeRetry),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  foregroundColor: Colors.brown,
+                  side: BorderSide(
+                    color: Colors.brown.withValues(alpha: 0.4),
+                  ),
+                  // Stessa forma a pillola del bottone d'acquisto, così i due
+                  // stati del dialog non sembrano disegnati da mani diverse.
+                  shape: const StadiumBorder(),
+                  textStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
           ],
         );

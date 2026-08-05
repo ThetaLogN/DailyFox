@@ -155,10 +155,19 @@ class PurchaseHelper {
               product.value != null ? CoffeeStatus.ready : CoffeeStatus.unavailable;
       }
 
-      // Sempre, qualunque sia l'esito: senza questo lo store riconsegna la
-      // transazione a ogni avvio.
-      if (purchase.pendingCompletePurchase) {
-        await _store.completePurchase(purchase);
+      // Chiude ogni transazione conclusa, qualunque sia l'esito.
+      //
+      // Volutamente NON si guarda `pendingCompletePurchase`: con StoreKit 2 il
+      // plugin lo definisce come `status == purchased`, quindi resta falso per
+      // le transazioni `restored`. Fidarsene le lascerebbe aperte per sempre, e
+      // una transazione aperta viene riconsegnata al posto di un nuovo
+      // acquisto: il foglio di pagamento non comparirebbe mai più.
+      if (purchase.status != PurchaseStatus.pending) {
+        try {
+          await _store.completePurchase(purchase);
+        } catch (e) {
+          debugPrint('Error completing purchase: $e');
+        }
       }
     }
   }

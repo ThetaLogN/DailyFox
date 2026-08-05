@@ -12,6 +12,7 @@ import '../helpers/database_helper.dart';
 import '../helpers/badge_helper.dart';
 import '../helpers/streak_helper.dart';
 import '../helpers/purchase_helper.dart';
+import '../helpers/home_sections.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
 import 'widgets/streak_card.dart';
@@ -45,6 +46,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   // Streak
   int _currentStreak = 0;
   int _bestStreak = 0;
+
+  /// Tutte le entry, per la heatmap annuale in home.
+  List<DiaryEntry> _allEntries = [];
+
   bool _isStreakFrozen = false;
   late AnimationController _streakAnimationController;
   late AnimationController _fireAnimationController;
@@ -174,6 +179,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     await prefs.setInt('current_streak', currentStreak);
 
     final bestStreak = prefs.getInt('best_streak') ?? 0;
+    await HomeSection.load();
+    final allEntries = await DatabaseHelper().getAllEntries();
 
     // BACKFILL BADGES: Se l'utente ha aggiornato l'app,
     // garantiamo che abbia i badge che gli spettano in base allo slancio ATTUALE.
@@ -183,6 +190,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _currentStreak = currentStreak;
       _bestStreak = bestStreak;
       _isStreakFrozen = status.isFrozen;
+      _allEntries = allEntries;
     });
     if (_currentStreak > 0) {
       _streakAnimationController.forward();
@@ -220,6 +228,67 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         }
       }
     }
+  }
+
+  /// Le sezioni delle statistiche che l'utente ha scelto di replicare qui.
+  ///
+  /// Titolo, icona, colore e widget vengono dal registro [HomeSection], lo
+  /// stesso da cui li prende la pagina statistiche: le due schermate non
+  /// possono mostrare cose diverse.
+  Widget _buildHomeSections() {
+    return ValueListenableBuilder<Set<HomeSection>>(
+      valueListenable: HomeSection.enabledNotifier,
+      builder: (context, sections, _) {
+        if (sections.isEmpty || _allEntries.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final l10n = AppLocalizations.of(context)!;
+
+        return Column(
+          children: [
+            for (final section in HomeSection.values)
+              if (sections.contains(section))
+                _buildHomeSectionCard(section, l10n),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildHomeSectionCard(HomeSection section, AppLocalizations l10n) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(section.icon, size: 18, color: section.accent),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      section.title(l10n),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              section.build(_allEntries),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showStreakCelebration() {
@@ -341,20 +410,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
       await _updateStreak();
 
-      final entries = await DatabaseHelper().getAllEntries();
-      final last10 =
-          entries.length > 10 ? entries.sublist(entries.length - 10) : entries;
-      final averageRating = last10.isEmpty
-          ? _rating
-          : (last10.map((e) => e.rating).reduce((a, b) => a + b) /
-                  last10.length)
-              .round();
-
-      await WidgetService.saveAndUpdateWidget(
-        rating: averageRating,
-        emoji: _emoji,
-        keyword: _keyword,
-      );
+      await WidgetService.refreshFromDatabase();
 
       await NotiService().cancelNotificationsAll();
       _loadTodayEntry();
@@ -434,30 +490,37 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             children: [
               Text(l10n.dialogContentModifyRating),
               const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.widgets,
-                        color: Colors.blue.shade600, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.dialogWidgetReminder,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.blue.shade700,
+              // Riquadro informativo: i colori vengono dai ruoli del tema, non
+              // dalle tinte fisse `blue.shade50/200/700`, che in tema scuro
+              // producevano una macchia chiarissima dentro un dialog scuro.
+              Builder(builder: (context) {
+                final cs = Theme.of(context).colorScheme;
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: cs.primary.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.widgets, color: cs.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.dialogWidgetReminder,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: cs.onSurface,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                    ],
+                  ),
+                );
+              }),
               const SizedBox(height: 16),
               ValueListenableBuilder<ThemeMode>(
                 valueListenable: themeNotifier,
@@ -475,7 +538,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       title: Text(isDark ? l10n.modalitaScura : l10n.modalitaChiara),
                       secondary: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
                       value: isDark,
-                      activeColor: Colors.blue,
+                      // Stesso colore di tutti gli altri interruttori dell'app,
+                      // e segue il tema invece di un blu fisso.
+                      activeColor: Theme.of(context).colorScheme.primary,
                       onChanged: (value) async {
                         final prefs = await SharedPreferences.getInstance();
                         themeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
@@ -610,6 +675,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               opacityAnimation: _streakOpacityAnimation,
               fireAnimation: _fireAnimation,
             ),
+            _buildHomeSections(),
             const StatsCards(),
           ],
         ),
@@ -621,10 +687,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: () {
+        // Al rientro ricarichiamo slancio ed entry, che possono essere
+        // cambiati dal calendario. Le sezioni in home no: quelle arrivano da
+        // HomeSection.enabledNotifier e si aggiornano da sole.
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const CalendarPage()),
-        );
+        ).then((_) => _loadStreakData());
       },
       child: Container(
         margin: const EdgeInsets.all(16),
@@ -804,6 +873,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               opacityAnimation: _streakOpacityAnimation,
               fireAnimation: _fireAnimation,
             ),
+            _buildHomeSections(),
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -1121,6 +1191,50 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 // ── WidgetService ────────────────────────────────────────────────────────────
 
 class WidgetService {
+  /// Su quante valutazioni si media l'umore della volpe.
+  ///
+  /// Finestra corta di proposito: la volpe deve reagire in fretta a come stanno
+  /// andando i giorni, non fare la media della stagione.
+  static const int foxAverageWindow = 3;
+
+  /// Ricalcola la volpe dal database e aggiorna il widget.
+  ///
+  /// Unico punto in cui si decide cosa mostra la volpe: prima il calcolo stava
+  /// inline nel salvataggio della home, e il calendario non lo eseguiva affatto
+  /// — modificare una giornata da lì lasciava il widget fermo.
+  static Future<void> refreshFromDatabase() async {
+    // `getAllEntries` è ordinata per data, quindi "ultime" significa davvero
+    // le più recenti e non le ultime inserite.
+    final entries = await DatabaseHelper().getAllEntries();
+    if (entries.isEmpty) return;
+
+    // Emoji e parola chiave restano quelle del giorno più recente: la media
+    // riguarda l'umore, non il contenuto della giornata.
+    final latest = entries.last;
+
+    await saveAndUpdateWidget(
+      rating: foxRatingFrom(entries),
+      emoji: latest.emoji,
+      keyword: latest.keyword ?? '',
+    );
+  }
+
+  /// Il voto che determina l'espressione della volpe: media delle ultime
+  /// [foxAverageWindow] valutazioni, arrotondata.
+  ///
+  /// [entries] deve essere ordinata per data crescente, com'è quella che
+  /// restituisce `DatabaseHelper.getAllEntries`.
+  static int foxRatingFrom(List<DiaryEntry> entries) {
+    if (entries.isEmpty) return 7;
+
+    final recent = entries.length > foxAverageWindow
+        ? entries.sublist(entries.length - foxAverageWindow)
+        : entries;
+
+    return (recent.map((e) => e.rating).reduce((a, b) => a + b) / recent.length)
+        .round();
+  }
+
   static Future<void> saveAndUpdateWidget({
     required int rating,
     required String emoji,

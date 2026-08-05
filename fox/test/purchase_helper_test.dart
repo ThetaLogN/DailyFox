@@ -254,6 +254,23 @@ void main() {
       await store.dispose();
     });
 
+    // Con StoreKit 2 `pendingCompletePurchase` è vero solo per `purchased`:
+    // fidarsene lascerebbe le transazioni `restored` aperte per sempre, e una
+    // transazione aperta viene riconsegnata al posto di un nuovo acquisto.
+    test('completes a transaction even when it claims nothing is pending',
+        () async {
+      final store = FakeStore();
+      final helper = PurchaseHelper(gateway: store);
+      await helper.init();
+
+      store.deliver(
+          _purchase(PurchaseStatus.restored, pendingComplete: false));
+      await pumpEventQueue();
+
+      expect(store.completed, hasLength(1));
+      await store.dispose();
+    });
+
     test('a restore following a real tap is thanked', () async {
       final store = FakeStore();
       final helper = PurchaseHelper(gateway: store);

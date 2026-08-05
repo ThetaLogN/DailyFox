@@ -3,6 +3,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import '../models/diary_entry.dart';
 import '../helpers/database_helper.dart';
+import 'home_page.dart' show WidgetService;
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'stats_page.dart';
@@ -389,6 +390,9 @@ class _CalendarPageState extends State<CalendarPage> {
         await DatabaseHelper().insertEntry(entry);
       }
       await _loadEntries();
+      // Anche una modifica fatta da qui cambia la media: senza questa chiamata
+      // la volpe e il widget restavano fermi all'ultimo salvataggio dalla home.
+      await WidgetService.refreshFromDatabase();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -415,17 +419,23 @@ class _CalendarPageState extends State<CalendarPage> {
     final entry = _entries[dateKey];
     final hasEntry = entry != null;
 
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Su fondo quasi nero una velatura al 30% resta smorta: in tema scuro
+    // serve più opacità perché il colore del voto si veda.
+    final tint = isDark ? 0.45 : 0.30;
+
     return Container(
       margin: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: hasEntry
-            ? _getRatingColor(entry.rating).withValues(alpha: 0.3)
-            : (isToday ? Colors.blue.withValues(alpha: 0.1) : null),
+            ? _getRatingColor(entry.rating).withValues(alpha: tint)
+            : (isToday ? cs.primary.withValues(alpha: 0.12) : null),
         border: Border.all(
           color: isSelected
-              ? Colors.blue
+              ? cs.primary
               : (isToday
-                  ? Colors.blue.withValues(alpha: 0.5)
+                  ? cs.primary.withValues(alpha: 0.5)
                   : Colors.transparent),
           width: isSelected ? 2 : 1,
         ),
@@ -442,9 +452,11 @@ class _CalendarPageState extends State<CalendarPage> {
                 fontSize: 12,
                 fontWeight:
                     isToday ? FontWeight.bold : FontWeight.normal,
+                // Il numero deve restare leggibile su entrambi i temi: prima
+                // era grigio scuro fisso, invisibile sulla cella notturna.
                 color: hasEntry
-                    ? Colors.grey[800]
-                    : (isToday ? Colors.blue : Colors.grey[600]),
+                    ? cs.onSurface
+                    : (isToday ? cs.primary : cs.onSurfaceVariant),
               ),
             ),
           ),

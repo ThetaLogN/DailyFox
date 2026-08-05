@@ -72,9 +72,16 @@ class DatabaseHelper {
     );
   }
 
+  /// Tutte le entry, **ordinate per data**.
+  ///
+  /// L'ordine conta: senza `orderBy` sqflite restituisce le righe nell'ordine
+  /// di inserimento, così una giornata recuperata dal calendario finiva in
+  /// fondo e passava per "recente". Chi prende le ultime N entry otteneva le
+  /// ultime inserite, non le più recenti. Le date sono ISO8601, quindi
+  /// l'ordinamento alfabetico coincide con quello cronologico.
   Future<List<DiaryEntry>> getAllEntries() async {
     final db = await database;
-    final maps = await db.query('diary_entries');
+    final maps = await db.query('diary_entries', orderBy: 'date ASC');
     return List.generate(maps.length, (i) => DiaryEntry.fromMap(maps[i]));
   }
 

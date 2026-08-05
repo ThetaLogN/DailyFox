@@ -13,7 +13,27 @@ class BadgeCard extends StatelessWidget {
     this.showDescription = true,
   });
 
-  Color get _cardColor => badge.isUnlocked ? _colorForId(badge.id) : Colors.grey.shade200;
+  /// Sfondo della tessera.
+  ///
+  /// In tema chiaro è la pastello del badge. In tema scuro la pastello sarebbe
+  /// un riquadro luminoso su fondo nero: si usa invece l'accento a bassa
+  /// opacità, che conserva l'identità cromatica senza abbagliare.
+  Color _cardColorFor(BuildContext context) {
+    if (!badge.isUnlocked) return Colors.grey.shade200;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark
+        ? _accentForId(badge.id).withValues(alpha: 0.20)
+        : _colorForId(badge.id);
+  }
+
+  /// Accento per testi e bordi, schiarito in tema scuro perché tinte come
+  /// indigo o viola pieno non si staccherebbero dal fondo.
+  Color _accentFor(BuildContext context) {
+    if (!badge.isUnlocked) return Colors.grey.shade400;
+    final accent = _accentForId(badge.id);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? Color.lerp(accent, Colors.white, 0.45)! : accent;
+  }
 
   Color _colorForId(String id) {
     switch (id) {
@@ -32,7 +52,6 @@ class BadgeCard extends StatelessWidget {
     }
   }
 
-  Color get _accentColor => badge.isUnlocked ? _accentForId(badge.id) : Colors.grey.shade400;
 
   Color _accentForId(String id) {
     switch (id) {
@@ -59,6 +78,8 @@ class BadgeCard extends StatelessWidget {
         ? BadgeHelper.localizedName(badge.id, l10n)
         : '';
     final localizedDesc = BadgeHelper.localizedDescription(badge.id, l10n);
+    final accentColor = _accentFor(context);
+    final cardColor = _cardColorFor(context);
 
     return Card(
       elevation: badge.isUnlocked ? 3 : 1,
@@ -70,13 +91,13 @@ class BadgeCard extends StatelessWidget {
               ? LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [_cardColor, _cardColor.withValues(alpha: 0.6)],
+                  colors: [cardColor, cardColor.withValues(alpha: 0.6)],
                 )
               : LinearGradient(
                   colors: [cs.surfaceContainerHighest, cs.surfaceContainerHighest],
                 ),
           border: badge.isUnlocked
-              ? Border.all(color: _accentColor.withValues(alpha: 0.4), width: 1.5)
+              ? Border.all(color: accentColor.withValues(alpha: 0.4), width: 1.5)
               : null,
         ),
         child: Padding(
@@ -95,7 +116,7 @@ class BadgeCard extends StatelessWidget {
                       fontSize: 44,
                       color: badge.isUnlocked ? null : Colors.transparent,
                       shadows: badge.isUnlocked
-                          ? [Shadow(color: _accentColor.withValues(alpha: 0.3), blurRadius: 8)]
+                          ? [Shadow(color: accentColor.withValues(alpha: 0.3), blurRadius: 8)]
                           : null,
                     ),
                   ),
@@ -118,7 +139,7 @@ class BadgeCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: _accentColor,
+                          color: accentColor,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.white, width: 1.5),
                         ),
@@ -143,7 +164,7 @@ class BadgeCard extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
-                  color: badge.isUnlocked ? _accentColor : cs.onSurfaceVariant,
+                  color: badge.isUnlocked ? accentColor : cs.onSurfaceVariant,
                 ),
               ),
 
@@ -153,7 +174,7 @@ class BadgeCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: badge.isUnlocked
-                      ? _accentColor.withValues(alpha: 0.15)
+                      ? accentColor.withValues(alpha: 0.15)
                       : cs.outlineVariant.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -162,7 +183,7 @@ class BadgeCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: badge.isUnlocked ? _accentColor : cs.onSurfaceVariant,
+                    color: badge.isUnlocked ? accentColor : cs.onSurfaceVariant,
                   ),
                 ),
               ),
