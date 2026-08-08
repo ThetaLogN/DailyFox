@@ -6,6 +6,14 @@ class DiaryEntry {
   final String date;
   final bool slancio;
 
+  /// Nome del file della foto del giorno, non il percorso completo.
+  ///
+  /// Su iOS il contenitore dell'app cambia UUID a ogni aggiornamento: un
+  /// percorso assoluto salvato oggi punterebbe al vuoto dopo il prossimo
+  /// update. Il percorso si ricostruisce a ogni lettura con
+  /// `PhotoHelper.resolve`.
+  final String? photoPath;
+
   DiaryEntry({
     this.id,
     required this.rating,
@@ -13,6 +21,7 @@ class DiaryEntry {
     required this.keyword,
     required this.date,
     required this.slancio,
+    this.photoPath,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +32,7 @@ class DiaryEntry {
       'keyword': keyword,
       'date': date,
       'slancio': slancio ? 1 : 0,
+      'photo_path': photoPath,
     };
   }
 
@@ -34,6 +44,7 @@ class DiaryEntry {
       keyword: map['keyword'],
       date: map['date'],
       slancio: map['slancio'] == 1,
+      photoPath: map['photo_path'],
     );
   }
 }

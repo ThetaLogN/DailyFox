@@ -23,13 +23,15 @@ class MonthlyStatsChart extends StatelessWidget {
       final key = '${month.year}-${month.month.toString().padLeft(2, '0')}';
       final label = DateFormat('MMM\nyy').format(month);
 
-      final monthEntries = entries.where((e) => e.date.startsWith(key)).toList();
+      final monthEntries =
+          entries.where((e) => e.date.startsWith(key)).toList();
       final avg = monthEntries.isEmpty
           ? 0.0
           : monthEntries.map((e) => e.rating).reduce((a, b) => a + b) /
               monthEntries.length;
 
-      result.add((label: label, key: key, avg: avg, count: monthEntries.length));
+      result
+          .add((label: label, key: key, avg: avg, count: monthEntries.length));
     }
     return result;
   }
@@ -70,116 +72,135 @@ class MonthlyStatsChart extends StatelessWidget {
         // Chart wrappato in ClipRect per evitare overflow laterale
         ClipRect(
           child: SizedBox(
-            height: 200,
-            child: BarChart(
-              BarChartData(
-                maxY: 10,
-                minY: 0,
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 2,
-                  getDrawingHorizontalLine: (v) => FlLine(
-                    color: cs.outlineVariant.withValues(alpha: 0.3),
-                    strokeWidth: 1,
+            // Più alto: a 200 il grafico stava stretto e il tooltip non
+            // trovava spazio sopra le barre più lunghe.
+            height: 260,
+            // Spazio in alto: con maxY a 10 l'etichetta più alta cade
+            // sul bordo e metà carattere finiva tagliato.
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: BarChart(
+                BarChartData(
+                  maxY: 10,
+                  minY: 0,
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: 2,
+                    getDrawingHorizontalLine: (v) => FlLine(
+                      color: cs.outlineVariant.withValues(alpha: 0.3),
+                      strokeWidth: 1,
+                    ),
                   ),
-                ),
-                borderData: FlBorderData(show: false),
-                titlesData: FlTitlesData(
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 36,
-                      getTitlesWidget: (value, _) {
-                        final idx = value.toInt();
-                        if (idx < 0 || idx >= data.length) return const SizedBox();
-                        // Mostra etichette alternate per evitare sovrapposizioni
-                        if (monthsBack > 6 && idx % 2 != 0) {
-                          return const SizedBox();
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            data[idx].label,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: idx == bestIdx
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              color: idx == bestIdx
-                                  ? cs.primary
-                                  : cs.onSurfaceVariant,
+                  borderData: FlBorderData(show: false),
+                  titlesData: FlTitlesData(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 36,
+                        getTitlesWidget: (value, _) {
+                          final idx = value.toInt();
+                          if (idx < 0 || idx >= data.length) {
+                            return const SizedBox();
+                          }
+                          // Mostra etichette alternate per evitare sovrapposizioni
+                          if (monthsBack > 6 && idx % 2 != 0) {
+                            return const SizedBox();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              data[idx].label,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: idx == bestIdx
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: idx == bestIdx
+                                    ? cs.primary
+                                    : cs.onSurfaceVariant,
+                              ),
                             ),
-                          ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 2,
+                        reservedSize: 28,
+                        getTitlesWidget: (v, _) => Text(
+                          v.toInt().toString(),
+                          style: TextStyle(
+                              fontSize: 10, color: cs.onSurfaceVariant),
+                        ),
+                      ),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: false,
+                        reservedSize: 12, // spazio extra per l'ultima barra
+                      ),
+                    ),
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  barTouchData: BarTouchData(
+                    touchTooltipData: BarTouchTooltipData(
+                      // Senza questi il riquadro viene disegnato fuori
+                      // dall'area del grafico e i bordi si tagliano.
+                      fitInsideVertically: true,
+                      fitInsideHorizontally: true,
+                      getTooltipItem: (group, _, rod, __) {
+                        final d = data[group.x];
+                        if (d.count == 0) return null;
+                        final label = DateFormat('MMMM yyyy')
+                            .format(DateTime.parse('${d.key}-01'));
+                        return BarTooltipItem(
+                          '$label\n${l10n.statsAverageRating}: ${rod.toY.toStringAsFixed(1)}\n${d.count} ${l10n.statsEntries}',
+                          const TextStyle(color: Colors.white, fontSize: 11),
                         );
                       },
                     ),
                   ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      interval: 2,
-                      reservedSize: 28,
-                      getTitlesWidget: (v, _) => Text(
-                        v.toInt().toString(),
-                        style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
-                      ),
-                    ),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: false,
-                      reservedSize: 12, // spazio extra per l'ultima barra
-                    ),
-                  ),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  barGroups: List.generate(data.length, (i) {
+                    final d = data[i];
+                    final isEmpty = d.count == 0;
+                    final isBest = i == bestIdx;
+                    return BarChartGroupData(
+                      x: i,
+                      barRods: [
+                        BarChartRodData(
+                          toY: d.avg,
+                          // Larghezza ridotta per 12 mesi, più ampia per range brevi
+                          width: monthsBack <= 6 ? 26 : 14,
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(5)),
+                          gradient: isEmpty
+                              ? null
+                              : LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: isBest
+                                      ? [
+                                          cs.primary,
+                                          cs.primary.withValues(alpha: 0.7)
+                                        ]
+                                      : [
+                                          cs.primary.withValues(alpha: 0.5),
+                                          cs.primary.withValues(alpha: 0.2),
+                                        ],
+                                ),
+                          color: isEmpty
+                              ? cs.outlineVariant.withValues(alpha: 0.15)
+                              : null,
+                        ),
+                      ],
+                    );
+                  }),
                 ),
-                barTouchData: BarTouchData(
-                  touchTooltipData: BarTouchTooltipData(
-                    getTooltipItem: (group, _, rod, __) {
-                      final d = data[group.x];
-                      if (d.count == 0) return null;
-                      final label = DateFormat('MMMM yyyy')
-                          .format(DateTime.parse('${d.key}-01'));
-                      return BarTooltipItem(
-                        '$label\n${l10n.statsAverageRating}: ${rod.toY.toStringAsFixed(1)}\n${d.count} ${l10n.statsEntries}',
-                        const TextStyle(color: Colors.white, fontSize: 11),
-                      );
-                    },
-                  ),
-                ),
-                barGroups: List.generate(data.length, (i) {
-                  final d = data[i];
-                  final isEmpty = d.count == 0;
-                  final isBest = i == bestIdx;
-                  return BarChartGroupData(
-                    x: i,
-                    barRods: [
-                      BarChartRodData(
-                        toY: d.avg,
-                        // Larghezza ridotta per 12 mesi, più ampia per range brevi
-                        width: monthsBack <= 6 ? 26 : 14,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
-                        gradient: isEmpty
-                            ? null
-                            : LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: isBest
-                                    ? [cs.primary, cs.primary.withValues(alpha: 0.7)]
-                                    : [
-                                        cs.primary.withValues(alpha: 0.5),
-                                        cs.primary.withValues(alpha: 0.2),
-                                      ],
-                              ),
-                        color: isEmpty
-                            ? cs.outlineVariant.withValues(alpha: 0.15)
-                            : null,
-                      ),
-                    ],
-                  );
-                }),
               ),
             ),
           ),

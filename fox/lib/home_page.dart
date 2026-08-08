@@ -11,6 +11,7 @@ import '../models/diary_entry.dart';
 import '../helpers/database_helper.dart';
 import '../helpers/badge_helper.dart';
 import '../helpers/streak_helper.dart';
+import '../helpers/review_helper.dart';
 import '../helpers/purchase_helper.dart';
 import '../helpers/home_sections.dart';
 import 'package:home_widget/home_widget.dart';
@@ -20,6 +21,8 @@ import 'widgets/stats_cards.dart';
 import 'widgets/countdown_header.dart';
 import 'widgets/badge_unlock_dialog.dart';
 import 'widgets/coffee_dialog.dart';
+import 'widgets/photo_field.dart';
+import '../helpers/photo_helper.dart';
 import 'badges_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -34,6 +37,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String _emoji = '🙂';
   String _keyword = '';
   bool _showEmojiPicker = false;
+
+  /// Foto di oggi: nome del file, non percorso.
+  String? _photoFileName;
+
+  /// Preferenza `show_photo_field`: chi non usa le foto può togliere il campo
+  /// dalla home. Il calendario resta comunque il posto da cui aggiungerle, e
+  /// le foto già salvate non vengono toccate.
+  final ValueNotifier<bool> _showPhotoField = ValueNotifier(true);
+
+  /// File da cancellare a salvataggio confermato, quando la foto viene
+  /// sostituita o rimossa. Non prima: chi cambia idea senza salvare non deve
+  /// perdere quella vecchia.
+  String? _photoToDelete;
   bool _hasEntryToday = false;
   bool _entryLoaded = false;
   bool _isLoading = true;
@@ -41,7 +57,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final TextEditingController _keywordController = TextEditingController();
   late AnimationController _saveAnimationController;
   late Animation<double> _saveAnimation;
-  
 
   // Streak
   int _currentStreak = 0;
@@ -168,6 +183,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
+  /// True quando la giornata è completa e si può salvare.
+  ///
+  /// In pratica gira tutta sulla parola chiave: voto ed emoji partono da un
+  /// valore predefinito e non possono mai essere vuoti. Vengono citati lo
+  /// stesso perché la condizione descrive cosa serve per salvare, e se un
+  /// giorno perdessero il predefinito il pulsante si adeguerebbe da sé.
+  bool get _canSave =>
+      _keyword.trim().isNotEmpty && _emoji.isNotEmpty && _rating > 0;
+
   // ── Streak ───────────────────────────────────────────────────
 
   void _loadStreakData() async {
@@ -180,6 +204,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     final bestStreak = prefs.getInt('best_streak') ?? 0;
     await HomeSection.load();
+    _showPhotoField.value = prefs.getBool('show_photo_field') ?? true;
     final allEntries = await DatabaseHelper().getAllEntries();
 
     // BACKFILL BADGES: Se l'utente ha aggiornato l'app,
@@ -222,11 +247,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       }
       // Controlla nuovi badge sbloccati
       if (mounted) {
-        final newBadges = await BadgeHelper.checkAndUnlockBadges(_currentStreak);
+        final newBadges =
+            await BadgeHelper.checkAndUnlockBadges(_currentStreak);
         if (newBadges.isNotEmpty && mounted) {
           await showBadgeUnlockDialogs(context, newBadges);
         }
       }
+
+      // La recensione si chiede per ultima, a festeggiamenti finiti.
+      //
+      // Prima ci sono coriandoli e badge: sovrapporre il messaggio di sistema
+      // lo farebbe chiudere per sbaglio, e iOS lo conta comunque come mostrato.
+      await ReviewHelper.maybeAsk(_currentStreak);
     }
   }
 
@@ -361,12 +393,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           _emoji = todayEntry.emoji;
           _keyword = todayEntry.keyword ?? '';
           _keywordController.text = _keyword;
+          _photoFileName = todayEntry.photoPath;
+          _photoToDelete = null;
           _isLoading = false;
         });
       } else {
         setState(() {
           _hasEntryToday = false;
           _todayEntry = null;
+          _photoFileName = null;
+          _photoToDelete = null;
           _isLoading = false;
         });
       }
@@ -399,7 +435,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         emoji: _emoji,
         keyword: _keyword.trim(),
         date: DateTime.now().toIso8601String(),
-        slancio: true);
+        slancio: true,
+        photoPath: _photoFileName);
 
     try {
       if (_hasEntryToday && _todayEntry != null) {
@@ -409,6 +446,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       }
 
       await _updateStreak();
+
+      // Solo ora la foto precedente è davvero orfana: cancellarla prima del
+      // salvataggio la perderebbe anche a chi cambia idea.
+      final replaced = _photoToDelete;
+      if (replaced != null && replaced != _photoFileName) {
+        await PhotoHelper.delete(replaced);
+      }
+      _photoToDelete = null;
 
       await WidgetService.refreshFromDatabase();
 
@@ -468,7 +513,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          titlePadding: const EdgeInsets.only(left: 8, top: 16, right: 24, bottom: 8),
+          titlePadding:
+              const EdgeInsets.only(left: 8, top: 16, right: 24, bottom: 8),
           title: Row(
             children: [
               IconButton(
@@ -535,16 +581,54 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       border: Border.all(color: Theme.of(context).dividerColor),
                     ),
                     child: SwitchListTile(
-                      title: Text(isDark ? l10n.modalitaScura : l10n.modalitaChiara),
-                      secondary: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
+                      title: Text(
+                          isDark ? l10n.modalitaScura : l10n.modalitaChiara),
+                      secondary:
+                          Icon(isDark ? Icons.dark_mode : Icons.light_mode),
                       value: isDark,
                       // Stesso colore di tutti gli altri interruttori dell'app,
                       // e segue il tema invece di un blu fisso.
                       activeColor: Theme.of(context).colorScheme.primary,
                       onChanged: (value) async {
                         final prefs = await SharedPreferences.getInstance();
-                        themeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
+                        themeNotifier.value =
+                            value ? ThemeMode.dark : ThemeMode.light;
                         await prefs.setBool('isDark', value);
+                      },
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              ValueListenableBuilder<bool>(
+                valueListenable: _showPhotoField,
+                builder: (_, bool show, __) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Theme.of(context).dividerColor),
+                    ),
+                    child: SwitchListTile(
+                      title: Text(l10n.photoShowField),
+                      // Il sottotitolo chiarisce che la foto non è mai
+                      // richiesta: si legge proprio mentre si decide se
+                      // tenere il campo.
+                      subtitle: Text(
+                        l10n.photoShowFieldHint,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      isThreeLine: false,
+                      secondary: const Icon(Icons.photo_camera_outlined),
+                      value: show,
+                      activeColor: Theme.of(context).colorScheme.primary,
+                      onChanged: (value) async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool('show_photo_field', value);
+                        _showPhotoField.value = value;
                       },
                     ),
                   );
@@ -715,9 +799,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color:
-                  (_hasEntryToday ? _getRatingColor(_rating) : Colors.blue)
-                      .withValues(alpha: 0.3),
+              color: (_hasEntryToday ? _getRatingColor(_rating) : Colors.blue)
+                  .withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -765,8 +848,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -930,8 +1013,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       data: SliderTheme.of(context).copyWith(
                                         activeTrackColor:
                                             _getRatingColor(_rating),
-                                        inactiveTrackColor:
-                                            cs.outlineVariant,
+                                        inactiveTrackColor: cs.outlineVariant,
                                         thumbColor: _getRatingColor(_rating),
                                         overlayColor: _getRatingColor(_rating)
                                             .withValues(alpha: 0.2),
@@ -991,8 +1073,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               decoration: BoxDecoration(
                                 color: cs.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                    color: cs.outline, width: 2),
+                                border: Border.all(color: cs.outline, width: 2),
                               ),
                               child: Center(
                                 child: Text(
@@ -1016,8 +1097,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               height: 250,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
-                                border:
-                                    Border.all(color: cs.outlineVariant),
+                                border: Border.all(color: cs.outlineVariant),
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
@@ -1109,6 +1189,64 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  // Foto del giorno — facoltativa, e si vede.
+                  // Nascondibile del tutto dalle impostazioni.
+                  //
+                  // Volutamente NON una Card come voto, emoji e parola chiave:
+                  // quelle sono campi del modulo, e la parola chiave è pure
+                  // obbligatoria. Dare a questa lo stesso rilievo la farebbe
+                  // sembrare un altro passo da compiere. Niente ombra, titolo
+                  // in tono secondario, icona più piccola: il posto in cui
+                  // aggiungere qualcosa, non qualcosa che manca.
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _showPhotoField,
+                    builder: (context, showPhoto, _) {
+                      if (!showPhoto) return const SizedBox.shrink();
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: cs.outlineVariant),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.photo_camera_outlined,
+                                      color: cs.onSurfaceVariant, size: 20),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    l10n.photoOfTheDay,
+                                    style:
+                                        theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+                              PhotoField(
+                                fileName: _photoFileName,
+                                dateKey: _getDateKey(DateTime.now()),
+                                onPicked: (picked) => setState(() {
+                                  _photoToDelete ??= _photoFileName;
+                                  _photoFileName = picked;
+                                }),
+                                onRemoved: () => setState(() {
+                                  _photoToDelete ??= _photoFileName;
+                                  _photoFileName = null;
+                                }),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   const SizedBox(height: 32),
                   // Save button
                   AnimatedBuilder(
@@ -1121,18 +1259,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           height: 56,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
+                            // Spento finché la giornata non è completa: il
+                            // pulsante mostra da sé che manca qualcosa, invece
+                            // di accettare il tocco e poi rimproverare.
                             gradient: LinearGradient(
-                              colors: [
-                                theme.primaryColor,
-                                theme.primaryColor.withValues(alpha: 0.8),
-                              ],
+                              colors: _canSave
+                                  ? [
+                                      theme.primaryColor,
+                                      theme.primaryColor.withValues(alpha: 0.8),
+                                    ]
+                                  : [
+                                      cs.surfaceContainerHighest,
+                                      cs.surfaceContainerHighest,
+                                    ],
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: // if theme is dark add no shadow
-                                    theme.brightness == Brightness.dark
-                                        ? Colors.transparent
-                                        : theme.primaryColor.withValues(alpha: 0.3),
+                                // Niente ombra da spento: sporgerebbe come un
+                                // pulsante premibile.
+                                color: (theme.brightness == Brightness.dark ||
+                                        !_canSave)
+                                    ? Colors.transparent
+                                    : theme.primaryColor.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -1142,7 +1290,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 : null,
                           ),
                           child: ElevatedButton(
-                            onPressed: _saveEntry,
+                            onPressed: _canSave ? _saveEntry : null,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               shadowColor: Colors.transparent,
@@ -1157,17 +1305,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   _hasEntryToday
                                       ? Icons.edit
                                       : Icons.save_rounded,
-                                  color: Colors.white,
+                                  color: _canSave
+                                      ? Colors.white
+                                      : cs.onSurfaceVariant,
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
                                   _hasEntryToday
                                       ? l10n.saveButtonUpdate
                                       : l10n.saveButtonNew,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                                    color: _canSave
+                                        ? Colors.white
+                                        : cs.onSurfaceVariant,
                                   ),
                                 ),
                               ],

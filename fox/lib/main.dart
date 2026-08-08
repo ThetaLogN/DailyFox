@@ -13,6 +13,55 @@ import 'package:daily_fox/helpers/purchase_helper.dart';
 //>^-^<
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
+/// Colore base da cui Material genera l'intera palette.
+///
+/// Un solo punto: cambiarlo qui ritinge testi, interruttori, cursori e barre
+/// di avanzamento di tutta l'app.
+const Color _seedColor = Color(0xFFE8792B);
+
+/// Arancio dei comandi.
+///
+/// Non si usa il `primary` generato da Material: partendo da un arancio vivo
+/// lo scurisce fino al marrone per garantire il contrasto col bianco. Questo
+/// resta arancione e tiene comunque 4,1:1 sul testo bianco.
+const Color _primaryLight = Color(0xFFC2571B);
+const Color _primaryDark = Color(0xFFFF9D5C);
+
+/// Superfici quasi neutre.
+///
+/// Material tinge ogni superficie col seme: con un arancio saturo card e
+/// dialog diventavano rosa. Qui resta un accenno di calore, non una tinta.
+ColorScheme _scheme(Brightness brightness) {
+  final base = ColorScheme.fromSeed(
+    seedColor: _seedColor,
+    brightness: brightness,
+  );
+
+  if (brightness == Brightness.light) {
+    return base.copyWith(
+      primary: _primaryLight,
+      onPrimary: Colors.white,
+      surface: const Color(0xFFFCFBFA),
+      surfaceContainerLowest: Colors.white,
+      surfaceContainerLow: const Color(0xFFF7F5F3),
+      surfaceContainer: const Color(0xFFF2F0ED),
+      surfaceContainerHigh: const Color(0xFFECE9E6),
+      surfaceContainerHighest: const Color(0xFFE6E3DF),
+    );
+  }
+
+  return base.copyWith(
+    primary: _primaryDark,
+    onPrimary: const Color(0xFF3A1B05),
+    surface: const Color(0xFF161514),
+    surfaceContainerLowest: const Color(0xFF0F0E0D),
+    surfaceContainerLow: const Color(0xFF1C1B19),
+    surfaceContainer: const Color(0xFF201F1D),
+    surfaceContainerHigh: const Color(0xFF2A2926),
+    surfaceContainerHighest: const Color(0xFF353330),
+  );
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -83,18 +132,16 @@ class MyApp extends StatelessWidget {
             Locale('es'),
           ],
           title: 'DailyFox',
+          // Colore base arancio: è già quello dell'app — la volpe, la card
+          // dello slancio, il cursore del voto, la stella. L'indaco di prima
+          // era un residuo, e faceva uscire testi viola nei punti che
+          // ereditano `primary` senza chiederlo, come i TextButton.
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.indigo,
-              brightness: Brightness.light,
-            ),
+            colorScheme: _scheme(Brightness.light),
             useMaterial3: true,
           ),
           darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.indigo,
-              brightness: Brightness.dark,
-            ),
+            colorScheme: _scheme(Brightness.dark),
             useMaterial3: true,
           ),
           themeMode: currentMode,

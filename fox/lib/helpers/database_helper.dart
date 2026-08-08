@@ -23,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -41,6 +41,20 @@ class DatabaseHelper {
       }
       await db.execute('UPDATE diary_entries SET slancio = 1');
     }
+
+    if (oldVersion < 3) {
+      // Stesso schema difensivo usato per `slancio`: il controllo non è
+      // ridondante, protegge i database rimasti a metà tra due aggiornamenti.
+      final columns = await db.rawQuery('PRAGMA table_info(diary_entries)');
+      final columnNames = columns.map((col) => col['name']).toList();
+
+      if (!columnNames.contains('photo_path')) {
+        // Nullable senza default: l'assenza di foto è lo stato normale.
+        await db.execute(
+          'ALTER TABLE diary_entries ADD COLUMN photo_path TEXT',
+        );
+      }
+    }
   }
 
   Future _onCreate(Database db, int version) async {
@@ -51,7 +65,8 @@ class DatabaseHelper {
       emoji TEXT NOT NULL,
       keyword TEXT NOT NULL,
       date TEXT NOT NULL,
-      slancio INTEGER NOT NULL DEFAULT 0
+      slancio INTEGER NOT NULL DEFAULT 0,
+      photo_path TEXT
     )
   ''');
   }

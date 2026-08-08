@@ -124,6 +124,14 @@
   "@calendarTitle": {
     "description": "Title displayed in the app bar of the calendar page"
   },
+  "photoAdd": "Aggiungi una foto, se ti va",
+  "photoTakePhoto": "Scatta una foto",
+  "photoChooseFromGallery": "Scegli dalla galleria",
+  "photoReplace": "Sostituisci",
+  "photoRemove": "Rimuovi",
+  "photoOfTheDay": "Foto del giorno",
+  "photoShowField": "Mostra il campo foto",
+  "photoShowFieldHint": "La foto è sempre facoltativa",
   "noEntryMessage": "Nessun dato per questo giorno",
   "@noEntryMessage": {
     "description": "Message displayed when no diary entry exists for the selected day"

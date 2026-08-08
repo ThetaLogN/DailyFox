@@ -51,14 +51,30 @@ class _MoodChartState extends State<MoodChart> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Range selector
+        // I filtri scorrono, la media resta ancorata a destra.
+        //
+        // Prima c'era uno `Spacer` tra i due gruppi: quando la somma delle
+        // larghezze supera la riga nulla può cedere e il layout trabocca. Qui
+        // si vedeva per meno di un pixel, ma le etichette cambiano lunghezza
+        // con la lingua e in tedesco o russo il margine non c'è proprio.
         Row(
           children: [
-            _chip(l10n.statsWeekFilter, MoodChartRange.week, cs),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _chip(l10n.statsWeekFilter, MoodChartRange.week, cs),
+                    const SizedBox(width: 8),
+                    _chip(l10n.statsMonthFilter, MoodChartRange.month, cs),
+                    const SizedBox(width: 8),
+                    _chip(l10n.statsThreeMonthFilter, MoodChartRange.threeMonths,
+                        cs),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(width: 8),
-            _chip(l10n.statsMonthFilter, MoodChartRange.month, cs),
-            const SizedBox(width: 8),
-            _chip(l10n.statsThreeMonthFilter, MoodChartRange.threeMonths, cs),
-            const Spacer(),
             if (entries.isNotEmpty)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

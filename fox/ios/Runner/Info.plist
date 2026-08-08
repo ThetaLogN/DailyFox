@@ -31,6 +31,10 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>fox</string>
+	<key>NSCameraUsageDescription</key>
+	<string>DailyFox uses the camera so you can attach a photo to the day you are rating. Photos stay on your device and are never uploaded.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>DailyFox needs access to your photos so you can attach one to the day you are rating. Photos stay on your device and are never uploaded.</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

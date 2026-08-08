@@ -45,6 +45,54 @@ void main() {
       expect(entry.date, '2026-06-03');
       expect(entry.slancio, false);
     });
+
+    test('carries the photo file name through a map round-trip', () {
+      final entry = DiaryEntry(
+        id: 3,
+        rating: 7,
+        emoji: '🦊',
+        keyword: 'mare',
+        date: '2026-07-30',
+        slancio: true,
+        photoPath: '2026-07-30_1753900000000.jpg',
+      );
+
+      final restored = DiaryEntry.fromMap(entry.toMap());
+
+      expect(entry.toMap()['photo_path'], '2026-07-30_1753900000000.jpg');
+      expect(restored.photoPath, '2026-07-30_1753900000000.jpg');
+    });
+
+    // Le giornate senza foto sono la norma, non un caso d'errore: la colonna
+    // esiste dalla versione 3 del database e sulle entry vecchie è NULL.
+    test('a day without a photo stays null', () {
+      final entry = DiaryEntry(
+        rating: 5,
+        emoji: '🙂',
+        keyword: 'test',
+        date: '2026-07-30',
+        slancio: false,
+      );
+
+      expect(entry.photoPath, isNull);
+      expect(entry.toMap()['photo_path'], isNull);
+      expect(DiaryEntry.fromMap(entry.toMap()).photoPath, isNull);
+    });
+
+    test('reads an entry saved before the photo column existed', () {
+      // Mappa senza la chiave `photo_path`, com'era prima della migrazione.
+      final legacy = {
+        'id': 9,
+        'rating': 6,
+        'emoji': '😐',
+        'keyword': 'vecchia',
+        'date': '2026-01-01',
+        'slancio': 1,
+      };
+
+      expect(DiaryEntry.fromMap(legacy).photoPath, isNull);
+    });
+
   });
 
   group('DailyBadge Model Tests', () {

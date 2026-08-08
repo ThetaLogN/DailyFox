@@ -63,98 +63,111 @@ class WeekdayChart extends StatelessWidget {
       children: [
         ClipRect(
           child: SizedBox(
-            height: 180,
-            child: BarChart(
-              BarChartData(
-              maxY: 10,
-              minY: 0,
-              gridData: FlGridData(
-                show: true,
-                drawVerticalLine: false,
-                horizontalInterval: 2,
-                getDrawingHorizontalLine: (v) => FlLine(
-                  color: cs.outlineVariant.withValues(alpha: 0.3),
-                  strokeWidth: 1,
-                ),
-              ),
-              borderData: FlBorderData(show: false),
-              titlesData: FlTitlesData(
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 28,
-                    getTitlesWidget: (value, _) {
-                      final idx = value.toInt();
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(
-                          dayLabels[idx],
+            // Più alto: a 180 il grafico stava stretto e il tooltip non
+            // trovava spazio sopra le barre più lunghe.
+            height: 240,
+            // Spazio in alto: con maxY a 10 l'etichetta più alta cade
+            // sul bordo e metà carattere finiva tagliato.
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: BarChart(
+                BarChartData(
+                  maxY: 10,
+                  minY: 0,
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: 2,
+                    getDrawingHorizontalLine: (v) => FlLine(
+                      color: cs.outlineVariant.withValues(alpha: 0.3),
+                      strokeWidth: 1,
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  titlesData: FlTitlesData(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 28,
+                        getTitlesWidget: (value, _) {
+                          final idx = value.toInt();
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              dayLabels[idx],
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: idx == bestIdx
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: idx == bestIdx
+                                    ? cs.primary
+                                    : cs.onSurfaceVariant,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 2,
+                        reservedSize: 28,
+                        getTitlesWidget: (v, _) => Text(
+                          v.toInt().toString(),
                           style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: idx == bestIdx
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            color: idx == bestIdx
-                                ? cs.primary
-                                : cs.onSurfaceVariant,
-                          ),
+                              fontSize: 10, color: cs.onSurfaceVariant),
                         ),
-                      );
-                    },
+                      ),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: false,
+                        reservedSize: 8,
+                      ),
+                    ),
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
                   ),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 2,
-                    reservedSize: 28,
-                    getTitlesWidget: (v, _) => Text(
-                      v.toInt().toString(),
-                      style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
+                  barTouchData: BarTouchData(
+                    touchTooltipData: BarTouchTooltipData(
+                      // Senza questi il riquadro viene disegnato fuori
+                      // dall'area del grafico e i bordi si tagliano.
+                      fitInsideVertically: true,
+                      fitInsideHorizontally: true,
+                      getTooltipItem: (group, groupIdx, rod, rodIdx) {
+                        final d = data[group.x];
+                        if (d.count == 0) return null;
+                        return BarTooltipItem(
+                          '${rod.toY.toStringAsFixed(1)}\n${d.count} ${l10n.statsEntries}',
+                          const TextStyle(color: Colors.white, fontSize: 12),
+                        );
+                      },
                     ),
                   ),
-                ),
-                rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: false,
-                    reservedSize: 8,
-                  ),
-                ),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              ),
-              barTouchData: BarTouchData(
-                touchTooltipData: BarTouchTooltipData(
-                  getTooltipItem: (group, groupIdx, rod, rodIdx) {
-                    final d = data[group.x];
-                    if (d.count == 0) return null;
-                    return BarTooltipItem(
-                      '${rod.toY.toStringAsFixed(1)}\n${d.count} ${l10n.statsEntries}',
-                      const TextStyle(color: Colors.white, fontSize: 12),
+                  barGroups: List.generate(7, (i) {
+                    final d = data[i];
+                    final isActive = d.count > 0;
+                    final isBest = i == bestIdx;
+                    return BarChartGroupData(
+                      x: i,
+                      barRods: [
+                        BarChartRodData(
+                          toY: d.avg,
+                          color: isBest
+                              ? cs.primary
+                              : isActive
+                                  ? cs.primary.withValues(alpha: 0.4)
+                                  : cs.outlineVariant.withValues(alpha: 0.2),
+                          width: 28,
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(6)),
+                        ),
+                      ],
                     );
-                  },
+                  }),
                 ),
-              ),
-              barGroups: List.generate(7, (i) {
-                final d = data[i];
-                final isActive = d.count > 0;
-                final isBest = i == bestIdx;
-                return BarChartGroupData(
-                  x: i,
-                  barRods: [
-                    BarChartRodData(
-                      toY: d.avg,
-                      color: isBest
-                          ? cs.primary
-                          : isActive
-                              ? cs.primary.withValues(alpha: 0.4)
-                              : cs.outlineVariant.withValues(alpha: 0.2),
-                      width: 28,
-                      borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(6)),
-                    ),
-                  ],
-                );
-              }),
               ),
             ),
           ),
@@ -207,14 +220,63 @@ class WeekdayChart extends StatelessWidget {
   List<String> _fullDayLabels(BuildContext context) {
     final locale = Localizations.localeOf(context).languageCode;
     final labels = {
-      'it': ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'],
-      'es': ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-      'fr': ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'],
-      'de': ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'],
+      'it': [
+        'Lunedì',
+        'Martedì',
+        'Mercoledì',
+        'Giovedì',
+        'Venerdì',
+        'Sabato',
+        'Domenica'
+      ],
+      'es': [
+        'Lunes',
+        'Martes',
+        'Miércoles',
+        'Jueves',
+        'Viernes',
+        'Sábado',
+        'Domingo'
+      ],
+      'fr': [
+        'Lundi',
+        'Mardi',
+        'Mercredi',
+        'Jeudi',
+        'Vendredi',
+        'Samedi',
+        'Dimanche'
+      ],
+      'de': [
+        'Montag',
+        'Dienstag',
+        'Mittwoch',
+        'Donnerstag',
+        'Freitag',
+        'Samstag',
+        'Sonntag'
+      ],
       'ja': ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日', '日曜日'],
-      'ru': ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
+      'ru': [
+        'Понедельник',
+        'Вторник',
+        'Среда',
+        'Четверг',
+        'Пятница',
+        'Суббота',
+        'Воскресенье'
+      ],
       'zh': ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'],
     };
-    return labels[locale] ?? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return labels[locale] ??
+        [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday'
+        ];
   }
 }
